@@ -130,6 +130,9 @@ export interface FlqOption {
   where?: string
   set?: string
   value?: Record<string, DbAny>
+  order?: string
+  group?: string
+  limit?: string
   lastId?: boolean
 }
 
@@ -163,7 +166,11 @@ export namespace FieldOption {
 }
 export type FieldOption = FieldOption.Option
 /**排序 */
-export type OrderOption = Record<string, 'ACS' | 'DESC' | 1 | -1>
+export namespace OrderOption {
+  export type Op = 'ACS' | 'DESC' | 1 | -1
+  export type Option = string | Record<string, Op> | string[]
+}
+export type OrderOption = OrderOption.Option
 /**分组 */
 export type GroupOption = string
 /**查询条件 */
@@ -296,11 +303,14 @@ export class Flq extends EventEmitter {
         case 'from':
           if (!v) throw new FlqError('Flq.format:from为必选参数')
           return v
+        case 'field':
+          if (!v) return '*'
         case 'where':
           if (!v) return ''
           return 'WHERE ' + v
-        case 'field':
-          if (!v) return '*'
+        case 'order':
+          if (!v) return ''
+          return 'ORDER BY ' + v
         default:
           if (!v) return ''
           return v
@@ -317,12 +327,11 @@ export class Flq extends EventEmitter {
    */
   async send(method: string) {
     const { option } = this
-    this.emit('beforeSend', { method, option })
     //@ts-ignore
     const ctn: Connection = await this.getConnect()
     const sql = this.format(method)
     this.emit('format', { sql, method, option })
-    const data: any[] = await this.query(sql, ctn)
+    const data: any[] | any = await this.query(sql, ctn)
     if (option.lastId) {
       //@ts-ignore
       data.lastId = await this.lastId(ctn)
@@ -391,9 +400,15 @@ export class Flq extends EventEmitter {
     return db
   }
   /**排序 */
-  order(option: OrderOption) {
+  order(option: OrderOption, defOp: OrderOption.Op) {
     const db = this.clone()
     const { option: sp } = db
+    const sql = Methods.order(option, defOp)
+    if (sp.where === undefined) {
+      sp.order = sql
+    } else {
+      sp.where += ', ' + sql
+    }
     return db
   }
   /**分组 */
@@ -406,6 +421,13 @@ export class Flq extends EventEmitter {
   limit(option: Limit) {
     const db = this.clone()
     const { option: sp } = db
+    return db
+  }
+  /**获取最后一个插入的id */
+  lastId() {
+    const db = this.clone()
+    const { option: sp } = db
+    sp.lastId = true
     return db
   }
   /**查询 */

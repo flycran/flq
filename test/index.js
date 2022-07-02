@@ -11,10 +11,8 @@ let db = new Flq(
       id: 'int',
       shop: {
         default: '没有店铺',
-        postreat() {
-
-        }
-      }
+        postreat() {},
+      },
     },
   }
 )
@@ -23,6 +21,10 @@ const sql = db
   .from('user')
   .field({
     name: 'rename',
+  })
+  .order({
+    'id': 1,
+    a: -1
   })
   // .where([length('mail'), '>', 18])
   .format('select')

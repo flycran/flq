@@ -1,4 +1,12 @@
-import { FlqError, FromOption, WhereOption, FieldOption, field as pf, escape } from './index'
+import {
+  FlqError,
+  field as pf,
+  escape,
+  FromOption,
+  WhereOption,
+  FieldOption,
+  OrderOption,
+} from './index'
 
 const boolOpers: WhereOption.Op[] = ['AND', 'OR']
 const compOpers: WhereOption.Com[] = [
@@ -23,6 +31,7 @@ export function from(option: FromOption): string {
   if (typeof option === 'string') return pf(option)
   throw new FlqError(`methods.from: 不受支持的参数类型:${JSON.stringify(option)}`)
 }
+
 export function field(option: FieldOption): string {
   if (typeof option === 'string') return pf(option)
   let r: any[] = []
@@ -56,6 +65,7 @@ export function field(option: FieldOption): string {
   }
   throw new FlqError(`methods.field: 不受支持的参数类型:${JSON.stringify(option)}`)
 }
+
 export function where(option: WhereOption, op: WhereOption.Op = 'AND'): string {
   if (typeof option === 'string') return option
   if (Array.isArray(option)) {
@@ -105,18 +115,29 @@ export function where(option: WhereOption, op: WhereOption.Op = 'AND'): string {
   }
   throw new FlqError(`methods.where: 不受支持的参数类型:${JSON.stringify(option)}`)
 }
-export function order(param: any) {
-  if (typeof param === 'string') return param
-  if (param === undefined) return ''
-  const sql = 'ORDER BY '
-  const arr = []
-  if (typeof param !== 'object') throw new FlqError('order 参数必须为对象')
-  for (const key in param) {
-    const val = param[key]
-    arr.push(`\`${key}\`${typeof val === 'string' ? ' ' + val : ''}`)
+
+export function order(option: OrderOption, defOp?: OrderOption.Op) {
+  if (typeof option === 'string') {
+    if (!defOp || defOp === 'ACS' || defOp === 1) return pf(option)
+    return pf(option) + ' DESC'
   }
-  return sql + arr.join(',')
+  if (Array.isArray(option)) {
+    if (!defOp || defOp === 'ACS' || defOp === 1) return option.map((e) => pf(e)).join(', ')
+    return option.map((e) => pf(e) + ' DESC').join(', ')
+  }
+  if (typeof option === 'object') {
+    const arr = []
+    for (const key in option) {
+      //@ts-ignore
+      const op = option[key]
+      if (op === 'ACS' || op === 1) arr.push(pf(key))
+      else arr.push(pf(key) + ' DESC')
+    }
+    return arr.join(', ')
+  }
+  throw new FlqError(`methods.order: 不受支持的参数类型:${JSON.stringify(option)}`)
 }
+
 export function limit(param: any) {
   if (typeof param === 'string') return param
   if (param === undefined) return ''
@@ -139,6 +160,7 @@ export function limit(param: any) {
   }
   throw new FlqError('limit: 不受支持的参数类型')
 }
+
 export function value(param: any) {
   if (typeof param === 'string') return param
   if (param instanceof Array) {
