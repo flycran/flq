@@ -9,6 +9,7 @@ import {
   LimitOption,
   GroupOption,
   ValueOption,
+  SetOption,
 } from './index'
 
 const boolOpers: WhereOption.Op[] = ['AND', 'OR']
@@ -167,23 +168,23 @@ export function value(option: ValueOption): ValueOption {
   if (typeof option === 'object') {
     const obj: any = {}
     for (const k in option) {
-      const v = option[k]
+      let v = option[k]
+      if (Array.isArray(v)) v = v.join(',')
       obj[pf(k)] = escape(v)
     }
     return obj
   }
   throw new FlqError('value: 不受支持的参数类型')
 }
-export function set(param: any) {
-  if (typeof param === 'string') return param
-  if (typeof param === 'object') {
-    const r: string[] = []
-    for (const k in param) {
-      const v = param[k]
-      if (v === undefined) continue
-      r.push(`\`${k}\` = ${escape(param[k])}`)
+export function set(option: SetOption): string {
+  if (typeof option === 'object') {
+    const arr: any = []
+    for (const k in option) {
+      let v = option[k]
+      if (Array.isArray(v)) v = v.join(',')
+      arr.push(`${pf(k)} = ${escape(v)}`)
     }
-    return r.join(', ')
+    return arr.join(', ')
   }
   throw new FlqError('set: 不受支持的参数类型')
 }

@@ -1,5 +1,6 @@
-const { Flq } = require('../lib')
+const { Flq, escape } = require('../lib')
 const { length } = require('../lib/functions')
+
 let db = new Flq(
   {
     user: 'root',
@@ -19,10 +20,13 @@ let db = new Flq(
 
 const sql = db
   .from('user')
-  .value({
+  .set({
     a: 1,
     b: 2
   })
-  .format('insert')
+  .set({
+    c: 3
+  })
+  .format('update')
 console.log(sql)
 db.end()

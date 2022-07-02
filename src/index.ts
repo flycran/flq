@@ -397,14 +397,14 @@ export class Flq extends EventEmitter {
     return db
   }
   /**设置值 */
-  set(...option: SetOption[]) {
+  set(option: SetOption) {
     const db = this.clone()
     const { option: sp } = db
-    const sql = option.map((e) => methods.set(e)).join(', ')
-    if (sp.where === undefined) {
-      sp.where = sql
+    const sql = methods.set(option)
+    if (sp.set === undefined) {
+      sp.set = sql
     } else {
-      sp.where += ' AND ' + sql
+      sp.set += ', ' + sql
     }
     return db
   }
