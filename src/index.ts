@@ -36,30 +36,30 @@ export class FlqError extends Error {
   }
 }
 
-import * as Methods from './methods'
+import * as methods from './methods'
 /**深拷贝 */
-const deepClone = (target: any) => {
+function deepClone<T>(target: T): T {
   const targetType = typeof target
-  let result
+  if (Array.isArray(target)) {
+    //@ts-ignore
+    return target.map((e) => deepClone(e))
+  }
   if (targetType === 'object') {
-    result = {}
-  } else if (Array.isArray(target)) {
-    result = []
-  } else {
-    return target
-  }
-  for (let key in target) {
-    const value = target[key]
-    const valueType = typeof value
-    if (valueType === 'object') {
-      // @ts-ignore
-      result[key] = deepClone(value)
-    } else {
-      // @ts-ignore
-      result[key] = value
+    const result: any = {}
+    for (let key in target) {
+      const value = target[key]
+      const valueType = typeof value
+      if (valueType === 'object') {
+        // @ts-ignore
+        result[key] = deepClone(value)
+      } else {
+        // @ts-ignore
+        result[key] = value
+      }
     }
+    return result
   }
-  return result
+  return target
 }
 /**连接配置 */
 interface ConnectOption {
@@ -132,25 +132,14 @@ export interface FlqOption {
   value?: Record<string, DbAny>
   order?: string
   group?: string
-  limit?: string
+  limit?: (number | void)[]
   lastId?: boolean
 }
 
 type DbAny = string | number | boolean | Date
-
-/**分页 */
-export type Limit =
-  | [number, number]
-  | {
-      /**页码(从1开始) */
-      page: number
-      /**每页条数 */
-      size: number
-    }
-
 type DbData = Record<string, DbAny>
 export type SetOption = DbData
-export type ValueOption = Record<string, DbAny>
+export type ValueOption = Record<string, any>
 
 export type FromOption = string
 /**查询字段 */
@@ -197,6 +186,17 @@ export namespace WhereOption {
   export type Option = (WhereOp & WhereObj) | Condition | string
 }
 export type WhereOption = WhereOption.Option
+/**分页 */
+export type LimitOption =
+  | [number, number]
+  | [
+      {
+        /**页码(从1开始) */
+        page: number
+        /**每页条数 */
+        size: number
+      }
+    ]
 
 /**模型选项 */
 export namespace ModelOption {
@@ -311,6 +311,15 @@ export class Flq extends EventEmitter {
         case 'order':
           if (!v) return ''
           return 'ORDER BY ' + v
+        case 'limit':
+          if (!v) return ''
+          return 'LIMIT ' + v.join(', ')
+        case 'group':
+          if (!v) return ''
+          return 'GROUP BY ' + v
+        case 'value':
+          if (!v) return ''
+          return `(${Object.keys(v).join(', ')}) VALUES (${Object.values(', ')})`
         default:
           if (!v) return ''
           return v
@@ -355,7 +364,7 @@ export class Flq extends EventEmitter {
   from(...option: FromOption[]) {
     const db = this.clone()
     const { option: sp } = db
-    const sql = option.map((e) => Methods.from(e)).join(', ')
+    const sql = option.map((e) => methods.from(e)).join(', ')
     if (sp.from === undefined) {
       sp.from = sql
     } else {
@@ -367,7 +376,7 @@ export class Flq extends EventEmitter {
   field(...option: FieldOption[]) {
     const db = this.clone()
     const { option: sp } = db
-    const sql = option.map((e) => Methods.field(e)).join(', ')
+    const sql = option.map((e) => methods.field(e)).join(', ')
     if (sp.field === undefined) {
       sp.field = sql
     } else {
@@ -379,7 +388,7 @@ export class Flq extends EventEmitter {
   where(...option: WhereOption[]) {
     const db = this.clone()
     const { option: sp } = db
-    const sql = option.map((e) => Methods.where(e)).join(' AND ')
+    const sql = option.map((e) => methods.where(e)).join(' AND ')
     if (sp.where === undefined) {
       sp.where = sql
     } else {
@@ -391,7 +400,7 @@ export class Flq extends EventEmitter {
   set(...option: SetOption[]) {
     const db = this.clone()
     const { option: sp } = db
-    const sql = option.map((e) => Methods.set(e)).join(', ')
+    const sql = option.map((e) => methods.set(e)).join(', ')
     if (sp.where === undefined) {
       sp.where = sql
     } else {
@@ -403,7 +412,7 @@ export class Flq extends EventEmitter {
   order(option: OrderOption, defOp: OrderOption.Op) {
     const db = this.clone()
     const { option: sp } = db
-    const sql = Methods.order(option, defOp)
+    const sql = methods.order(option, defOp)
     if (sp.where === undefined) {
       sp.order = sql
     } else {
@@ -415,13 +424,45 @@ export class Flq extends EventEmitter {
   group(option: GroupOption) {
     const db = this.clone()
     const { option: sp } = db
+    sp.group = methods.group(option)
+    return db
+  }
+  /**插入数据 */
+  value(option: ValueOption) {
+    const db = this.clone()
+    const { option: sp } = db
+    if (!sp.value) sp.value = methods.value(option)
+    else Object.assign(sp.value, methods.value(option))
     return db
   }
   /**分页 */
-  limit(option: Limit) {
+  limit(...option: LimitOption) {
     const db = this.clone()
     const { option: sp } = db
+    if (!sp.limit) sp.limit = methods.limit(option)
     return db
+  }
+  /**每页条数 */
+  size(size: number) {
+    const db = this.clone()
+    const { option: sp } = db
+    if (size > 0) {
+      sp.limit = [, size]
+      return db
+    }
+    throw new FlqError('Flq.page: 必须传入大于0的整数')
+  }
+  /**页码 */
+  page(page: number) {
+    const db = this.clone()
+    const { option: sp } = db
+    if (page > 0) {
+      const { limit } = sp
+      if (!limit || !limit[1]) throw new FlqError('Flq.page: 必须先设置每页条数')
+      limit[0] = (page - 1) * limit[1]
+      return db
+    }
+    throw new FlqError('Flq.page: 必须传入大于0的整数')
   }
   /**获取最后一个插入的id */
   lastId() {

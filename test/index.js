@@ -19,14 +19,10 @@ let db = new Flq(
 
 const sql = db
   .from('user')
-  .field({
-    name: 'rename',
+  .value({
+    a: 1,
+    b: 2
   })
-  .order({
-    'id': 1,
-    a: -1
-  })
-  // .where([length('mail'), '>', 18])
-  .format('select')
+  .format('insert')
 console.log(sql)
 db.end()

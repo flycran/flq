@@ -6,6 +6,9 @@ import {
   WhereOption,
   FieldOption,
   OrderOption,
+  LimitOption,
+  GroupOption,
+  ValueOption,
 } from './index'
 
 const boolOpers: WhereOption.Op[] = ['AND', 'OR']
@@ -138,42 +141,36 @@ export function order(option: OrderOption, defOp?: OrderOption.Op) {
   throw new FlqError(`methods.order: 不受支持的参数类型:${JSON.stringify(option)}`)
 }
 
-export function limit(param: any) {
-  if (typeof param === 'string') return param
-  if (param === undefined) return ''
-  if (typeof param === 'number') {
-    if (param % 1 === 0 && param > 0) return `LIMIT ${param}`
-    throw new FlqError('limit: 分页参数必须为正整数')
-  }
-  if (param instanceof Array) {
-    const [lim, off] = param
-    if (lim % 1 === 0 && off % 1 === 0 && lim > 0 && off && off > 0)
-      return `LIMIT ${param[0]}, ${param[1]}`
-    throw new FlqError('limit: 分页参数必须为正整数')
-  }
-  if (typeof param === 'object') {
-    const { page = 1, size = 10 } = param
-    if (page % 1 === 0 && size % 1 === 0 && page > 0 && size > 0) {
-      return `LIMIT ${(page - 1) * size}, ${size}`
+export function limit(option: LimitOption): number[] {
+  if (option instanceof Array) {
+    const [lim, off] = option
+    if (typeof lim === 'object') {
+      return [(lim.page - 1) * lim.size, lim.size]
     }
-    throw new FlqError('limit: 分页参数必须为正整数')
+    if (lim > 0 && !off) {
+      return [lim]
+    }
+    if (!off) throw new FlqError(`limit: 不受支持的参数类型:${JSON.stringify(option)}`)
+    if (lim > 0 && off > 1) {
+      return [lim, off]
+    }
+    throw new FlqError(`limit: 不受支持的参数类型:${JSON.stringify(option)}`)
   }
-  throw new FlqError('limit: 不受支持的参数类型')
+  throw new FlqError(`limit: 不受支持的参数类型:${JSON.stringify(option)}`)
 }
 
-export function value(param: any) {
-  if (typeof param === 'string') return param
-  if (param instanceof Array) {
-    return `VALUES (${param.map((a) => escape(a)).join(', ')})`
-  }
-  if (typeof param === 'object') {
-    const key = []
-    const value = []
-    for (const k in param) {
-      key.push('`' + k + '`')
-      value.push(escape(param[k]))
+export function group(option: GroupOption): string {
+  return pf(option)
+}
+
+export function value(option: ValueOption): ValueOption {
+  if (typeof option === 'object') {
+    const obj: any = {}
+    for (const k in option) {
+      const v = option[k]
+      obj[pf(k)] = escape(v)
     }
-    return `(${key.join(', ')}) VALUES (${value.join(', ')})`
+    return obj
   }
   throw new FlqError('value: 不受支持的参数类型')
 }
