@@ -1,7 +1,22 @@
 import { FlqError, FromOption, WhereOption, FieldOption, field as pf, escape } from './index'
 
-const boolOpers: WhereOption.Op[] = ['AND', 'NOT', 'OR']
-const compOpers: WhereOption.Com[] = ['!=', '<', '<=', '<>', '=', '>', '>=']
+const boolOpers: WhereOption.Op[] = ['AND', 'OR']
+const compOpers: WhereOption.Com[] = [
+  '>',
+  '<',
+  '=',
+  '!=',
+  '<=',
+  '>=',
+  '<>',
+  'is null',
+  'is not null',
+  'between',
+  'like',
+  'in',
+  'not in',
+  'regexp',
+]
 
 export function from(option: FromOption): string {
   //@ts-ignore
@@ -33,7 +48,7 @@ export function field(option: FieldOption): string {
         if (e.as) f = f + ' as ' + pf(e.as)
       } else {
         //@ts-ignore
-        f = pf(key) + ' as ' + e
+        f = pf(key) + ' as ' + pf(e)
       }
       r.push(f)
     }
@@ -52,8 +67,16 @@ export function where(option: WhereOption, op: WhereOption.Op = 'AND'): string {
       let op = option[1]
       if (!compOpers.includes(op))
         throw new FlqError(`methods.field: 不受支持的比较运算符:"${option[1]}"`)
-      if (op === 'between')
+      if (op === 'between') {
         return `${pf(option[0])} BETWEEN ${escape(option[2])} AND ${escape(option[3])}`
+      }
+      if (op === 'in' || op === 'not in') {
+        if (!Array.isArray(option[2]))
+          throw new FlqError(
+            `methods.field: "${op}"比较符仅支持数组,不受支持的参数类型:${JSON.stringify(option[2])}`
+          )
+        return `${pf(option[0])} ${op} (${option[2].map((e: any) => escape(e)).join(', ')})`
+      }
       //@ts-ignore
       op = op.toUpperCase()
       return `${pf(option[0])} ${op} ${escape(option[2])}`
@@ -65,12 +88,18 @@ export function where(option: WhereOption, op: WhereOption.Op = 'AND'): string {
       //@ts-ignore
       const value = option[key]
       if (value === undefined) continue
-      let k = `\`${key}\``
-      if (value instanceof Array) {
-        ws.push(`(${value.map((a) => `${k} = ${escape(a)}`).join(' OR ')})`)
+      //@ts-ignore
+      if (boolOpers.includes(key)) {
+        //@ts-ignore
+        ws.push(`(${where(value, key)})`)
         continue
       }
-      ws.push(`${k} = ${escape(value)}`)
+      let pk = pf(key)
+      if (value instanceof Array) {
+        ws.push(`${pk} IN (${value.map((e) => escape(e)).join(', ')})`)
+        continue
+      }
+      ws.push(`${pk} = ${escape(value)}`)
     }
     return ws.join(' ' + op + ' ')
   }

@@ -13,6 +13,7 @@ export declare function field(param: [string, string]): string;
 export declare class FlqError extends Error {
     constructor(msg: string);
 }
+/**连接配置 */
 interface ConnectOption {
     /**数据库类型(目前仅支持mysql) */
     type?: 'mysql';
@@ -86,7 +87,6 @@ export interface FlqOption {
     lastId?: boolean;
 }
 declare type DbAny = string | number | boolean | Date;
-/**联合 */
 /**分页 */
 export declare type Limit = [number, number] | {
     /**页码(从1开始) */
@@ -117,13 +117,13 @@ export declare type OrderOption = Record<string, 'ACS' | 'DESC' | 1 | -1>;
 export declare type GroupOption = string;
 /**查询条件 */
 export declare namespace WhereOption {
-    export type Op = 'AND' | 'OR' | 'NOT';
-    export type Com = '>' | '<' | '=' | '!=' | '<=' | '>=' | '<>' | 'is null' | 'is not null' | 'between';
-    type Condition = [string, DbAny] | [string, Com, DbAny] | [string, 'between', DbAny, DbAny];
+    export type Op = 'AND' | 'OR';
+    export type Com = '>' | '<' | '=' | '!=' | '<=' | '>=' | '<>' | 'is null' | 'is not null' | 'between' | 'like' | 'in' | 'not in' | 'regexp';
+    type Condition = [string, DbAny] | [string, Com, any] | [string, 'between', DbAny, DbAny];
     type WhereOp = Partial<{
         [Key in Op]: Option;
     }>;
-    type WhereObj = Record<string, [Com, DbAny] | DbAny>;
+    type WhereObj = Record<string, [Com, DbAny] | any>;
     export type Option = (WhereOp & WhereObj) | Condition | string;
     export {};
 }
@@ -134,7 +134,7 @@ export declare namespace ModelOption {
         field: string;
         rename: string;
     }
-    type Sub = Record<string, SubOption>;
+    type Sub = Record<string, string | SubOption>;
     interface Ops {
         /**类型 */
         type?: string;
@@ -153,9 +153,7 @@ export declare namespace ModelOption {
         /**多表字段连接 */
         union?: Sub;
     }
-    export type Option = {
-        [x: string]: Ops;
-    };
+    export type Option = Record<string, Record<string, Ops>>;
     export {};
 }
 export declare type ModelOption = ModelOption.Option;

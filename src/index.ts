@@ -61,7 +61,7 @@ const deepClone = (target: any) => {
   }
   return result
 }
-
+/**连接配置 */
 interface ConnectOption {
   /**数据库类型(目前仅支持mysql) */
   type?: 'mysql'
@@ -135,12 +135,6 @@ export interface FlqOption {
 
 type DbAny = string | number | boolean | Date
 
-/**联合 */
-// type Join = {
-//   type: 'LEFT' | 'RIGHT' | 'INNER' | string
-//   on: {}
-// }
-
 /**分页 */
 export type Limit =
   | [number, number]
@@ -174,7 +168,7 @@ export type OrderOption = Record<string, 'ACS' | 'DESC' | 1 | -1>
 export type GroupOption = string
 /**查询条件 */
 export namespace WhereOption {
-  export type Op = 'AND' | 'OR' | 'NOT'
+  export type Op = 'AND' | 'OR'
   export type Com =
     | '>'
     | '<'
@@ -186,9 +180,13 @@ export namespace WhereOption {
     | 'is null'
     | 'is not null'
     | 'between'
-  type Condition = [string, DbAny] | [string, Com, DbAny] | [string, 'between', DbAny, DbAny]
+    | 'like'
+    | 'in'
+    | 'not in'
+    | 'regexp'
+  type Condition = [string, DbAny] | [string, Com, any] | [string, 'between', DbAny, DbAny]
   type WhereOp = Partial<{ [Key in Op]: Option }>
-  type WhereObj = Record<string, [Com, DbAny] | DbAny>
+  type WhereObj = Record<string, [Com, DbAny] | any>
   export type Option = (WhereOp & WhereObj) | Condition | string
 }
 export type WhereOption = WhereOption.Option
@@ -199,7 +197,7 @@ export namespace ModelOption {
     field: string
     rename: string
   }
-  type Sub = Record<string, SubOption>
+  type Sub = Record<string, string | SubOption>
 
   interface Ops {
     /**类型 */
@@ -219,7 +217,7 @@ export namespace ModelOption {
     /**多表字段连接 */
     union?: Sub
   }
-  export type Option = { [x: string]: Ops }
+  export type Option = Record<string, Record<string, Ops>>
 }
 export type ModelOption = ModelOption.Option
 
