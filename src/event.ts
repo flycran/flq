@@ -22,7 +22,7 @@ export class AsyncEvent {
         const r = e(...events)
         if (r instanceof Promise) als.add(r)
       })
-      Promise.all(ls)
+      Promise.all(als)
         .then((d) => {
           e(d)
         })
