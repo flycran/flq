@@ -1,5 +1,5 @@
 /**异步事件 */
-class AsyncEvent {
+export class AsyncEvent {
   listener: Map<string, Set<Function>> = new Map()
   on(type: string, listener: Function) {
     const { listener: ls } = this
@@ -13,13 +13,13 @@ class AsyncEvent {
     if (!l) return false
     return l.delete(listener)
   }
-  emit(type: string) {
+  emit(type: string, ...events: any[]) {
     return new Promise((e, r) => {
       const ls = this.listener.get(type)
       if (!ls) return
       const als: Set<Promise<any>> = new Set()
       ls.forEach((e) => {
-        const r = e()
+        const r = e(...events)
         if (r instanceof Promise) als.add(r)
       })
       Promise.all(ls)
