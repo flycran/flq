@@ -8,11 +8,7 @@
 
 ```js
 const { Flq } = require('flq')
-let db = new Flq({
-  user: 'root',
-  password: process.env.SQLPASSWORD,
-  database: 'test',
-})
+let db = new Flq({...})
 const { length } = require('flq/functions')
 
 const sql = await db
@@ -29,7 +25,10 @@ const sql = await db
   })
   .where([length('mail'), '>', 18])
   .format('select')
-// output: SELECT `name`, `password`, `power` as 权限, `mail` as `邮箱` FROM `user` WHERE `id` = 1 AND LENGTH(`mail`) > 18
+// output:
+// 	SELECT `name`, `password`, `power` as 权限, `mail` as `邮箱`
+// 		FROM `user`
+//		WHERE `id` = 1 AND LENGTH(`mail`) > 18
 ```
 
 该框架仍在开发中，暂不提供接口文档，但一定会在不久的将来发布。

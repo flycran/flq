@@ -1,32 +1,32 @@
-const { Flq, escape } = require('../lib')
+const { Flq, hooks } = require('../lib')
 const { length } = require('../lib/functions')
 
 let db = new Flq(
   {
     user: 'root',
     password: process.env.SQLPASSWORD,
-    database: 'jd',
+    database: 'test',
   },
   {
-    user: {
-      id: 'int',
-      shop: {
-        default: '没有店铺',
-        postreat() {},
+    student: {
+      list: {
+        toArray: true,
       },
     },
   }
 )
 
-const sql = db
-  .from('user')
-  .set({
-    a: 1,
-    b: 2
+const { modelPostreatHooks } = require('../lib/model')
+
+hooks.off('model-postreat', modelPostreatHooks.toArray)
+
+setTimeout(async () => {
+  const dbe = db.from('student').value({
+    name: '孙十',
+    gender: '男',
+    age: 13
   })
-  .set({
-    c: 3
-  })
-  .format('update')
-console.log(sql)
-db.end()
+  console.log(await dbe.insert())
+  console.log(dbe.sql)
+  db.end()
+}, 600)
