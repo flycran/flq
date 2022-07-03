@@ -1,3 +1,4 @@
+/**异步事件 */
 class AsyncEvent {
   listener: Map<string, Set<Function>> = new Map()
   on(type: string, listener: Function) {
