@@ -1,4 +1,4 @@
-import { createConnection, createPool, escape as $escape } from 'mysql2'
+import { createConnection, createPool, Connection, Pool, escape as $escape } from 'mysql2'
 import { AsyncEvent } from './event'
 import {
   FlqOption,
@@ -17,7 +17,6 @@ import {
 
 export const escape = $escape
 
-import { Connection, Pool } from 'mysql2'
 import * as $templates from './templates'
 const templates: Record<string, string> = $templates
 
@@ -43,8 +42,6 @@ export function field(p1: string | [string, string], p2?: string): string {
   if (Reg0.test(p1)) return p1
   return pf(p1)
 }
-
-import {} from './functions'
 
 /**Flq抛出错误 */
 export class FlqError extends Error {
@@ -131,6 +128,7 @@ export class Flq {
       const callBack = (err: Error) => {
         if (err) return r(err)
       }
+      //@ts-ignore
       this.pool ? this.pool.end(callBack) : this.connection?.end(callBack)
     })
   }
