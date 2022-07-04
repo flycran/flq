@@ -90,6 +90,11 @@ export class Flq {
       this.connection = createConnection(option)
     }
     this.model = model
+    setTimeout(() => {
+      if (hooks.listener.has('test')) {
+        hooks.emit('test', this).then(() => this.end())
+      }
+    }, 0)
   }
   /**sql参数 */
   option: FlqOption = {}

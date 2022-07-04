@@ -7,28 +7,20 @@
 - 下面是一个基本的示例
 
 ```js
-const { Flq } = require('flq')
-let db = new Flq({...})
-const { length } = require('flq/functions')
+const { Flq, hooks } = require('flq')
 
-const sql = await db
-  .from('user')
-  .field('name', 'password')
-  .field({
-    power: '权限',
-    mail: {
-      as: '邮箱',
-    },
-  })
-  .where({
-    id: 1,
-  })
-  .where([length('mail'), '>', 18])
-  .format('select')
-// output:
-// 	SELECT `name`, `password`, `power` as 权限, `mail` as `邮箱`
-// 		FROM `user`
-//		WHERE `id` = 1 AND LENGTH(`mail`) > 18
+const flq = new Flq({
+  pool: true, // 使用连接池 !推荐使用
+  user: 'root', // 登陆用户
+  password: process.env.SQLPASSWORD, // 登陆密码
+  database: 'test', // 数据库名
+})
+// 使用测试模式
+hooks.on('test', async () => {
+  const db = flq.from('student')
+  const result = await db.find()
+  console.log(result)
+})
 ```
 
-该框架仍在开发中，暂不提供接口文档，但一定会在不久的将来发布。
+前往[FLQ主页](https://flq.flycran.xyz)查看完整文档

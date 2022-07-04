@@ -4,7 +4,6 @@ module.exports = {
   themeConfig: {
     logo: '/hero.png',
     repo: 'https://gitee.com/cffh/flq',
-    docsRepo: 'https://gitee.com/cffh/flq-document',
     repoLabel: '查看源码',
     editLinks: true,
     editLinkText: '帮助我们改善此页面！',
@@ -15,6 +14,8 @@ module.exports = {
     ],
     sidebar: {
       '/guide/': ['', 'introduction'],
+      '/api/': [''],
+      '/support/': [''],
     },
   },
 }

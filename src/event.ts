@@ -7,6 +7,7 @@ export class AsyncEvent {
     const l = ls.get(type)
     if (!l) ls.set(type, new Set([listener]))
     else l.add(listener)
+    this.emit('addlistener', { type, listener })
   }
   off(type: string, listener: Function) {
     const { listener: ls } = this
