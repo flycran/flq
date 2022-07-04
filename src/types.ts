@@ -72,8 +72,9 @@ export interface FlqOption {
   order?: string
   group?: string
   limit?: (number | void)[]
+  virtualField?: string[]
   insertId?: boolean
-  foundRows?: boolean
+  foundRows?: string
 }
 /**基本索引对象 */
 export type Data = Record<string, any>

@@ -1,5 +1,5 @@
 import { createConnection, createPool, escape as $escape } from 'mysql2'
-import EventEmitter = require('events')
+import { AsyncEvent } from './event'
 import {
   FlqOption,
   ConnectOption,
@@ -21,7 +21,7 @@ import * as $templates from './templates'
 const templates: Record<string, string> = $templates
 
 /**钩子 */
-export const hooks = new EventEmitter()
+export const hooks = new AsyncEvent()
 const Reg0 = /^.+\(.*?\)$/
 /**模型处理 */
 import { postreat } from './model'
@@ -81,9 +81,8 @@ function deepClone<T>(target: T): T {
 
 const Reg = /\[(.+?)\]/g
 
-export class Flq extends EventEmitter {
+export class Flq {
   constructor(option: ConnectOption, model?: ModelOption) {
-    super()
     if (!option) return
     if (option.pool) {
       //@ts-ignore
@@ -189,7 +188,6 @@ export class Flq extends EventEmitter {
       }
     })
     this.sql = sql
-    this.emit('format', sql)
     hooks.emit('format', sql)
     return sql
   }
@@ -203,15 +201,14 @@ export class Flq extends EventEmitter {
     //@ts-ignore
     const ctn: Connection = await this.getConnect()
     const sql = this.format(method)
-    this.emit('format', { sql, method, option })
     const data: any = await this.query(sql, ctn)
-    postreat({ flq: this, data, method, connect: ctn })
+    await postreat({ flq: this, data, method, connect: ctn })
     // 释放连接
     if (this.pool) {
       //@ts-ignore
       ctn.release()
     }
-    this.emit('send', { data, method, option, sql })
+    hooks.emit('send', { data, method, option, sql })
     return data
   }
   /**克隆实例 */
@@ -297,15 +294,15 @@ export class Flq extends EventEmitter {
   value(option: ValueOption) {
     const db = this.clone()
     const { option: sp } = db
-    if (!sp.value) sp.value = methods.value(option)
-    else Object.assign(sp.value, methods.value(option))
+    if (sp.value) Object.assign(sp.value, methods.value(option))
+    else sp.value = methods.value(option)
     return db
   }
   /**分页 */
   limit(...option: LimitOption) {
     const db = this.clone()
     const { option: sp } = db
-    if (!sp.limit) sp.limit = methods.limit(option)
+    sp.limit = methods.limit(option)
     return db
   }
   /**每页条数 */
@@ -330,11 +327,19 @@ export class Flq extends EventEmitter {
     }
     throw new FlqError('Flq.page: 必须传入大于0的整数')
   }
-  /**获取一次查询的总列数 */
+  /**虚拟字段 */
+  virtualField(...option: string[]) {
+    const db = this.clone()
+    const { option: sp } = db
+    if (sp.virtualField) sp.virtualField.push(...option)
+    else sp.virtualField = [...option]
+    return db
+  }
+  /**获取上一次查询的总列数 */
   foundRows() {
     const db = this.clone()
     const { option: sp } = db
-    sp.foundRows = true
+    sp.foundRows = 'SQL_CALC_FOUND_ROWS'
     return db
   }
   /**获取最后一个插入的id */
@@ -358,5 +363,9 @@ export class Flq extends EventEmitter {
     const data = await this.send('insert')
     return data
   }
-  async count() {}
+  /**计数 */
+  async count() {
+    const data = await this.send('count')
+    return Object.values(data[0])[0]
+  }
 }

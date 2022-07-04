@@ -21,12 +21,9 @@ const { modelPostreatHooks } = require('../lib/model')
 hooks.off('model-postreat', modelPostreatHooks.toArray)
 
 setTimeout(async () => {
-  const dbe = db.from('student').value({
-    name: '孙十',
-    gender: '男',
-    age: 13
-  })
-  console.log(await dbe.insert())
+  const dbe = db.from('student').size(3).page(1).foundRows()
+  console.log(await dbe.find())
+  console.log(dbe.total)
   console.log(dbe.sql)
   db.end()
 }, 600)

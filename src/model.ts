@@ -2,7 +2,7 @@ import { ModelOption } from './types'
 import { Connection } from 'mysql2'
 import { Flq, hooks } from './index'
 import { Data } from './types'
-import { insertId } from './templates'
+import { insertId, foundRows } from './templates'
 /**预处理 */
 export function pretreat(option: { flq: Flq; from: string; field: string; value: any }) {
   hooks.emit('pretreat', option)
@@ -10,10 +10,9 @@ export function pretreat(option: { flq: Flq; from: string; field: string; value:
   const { model, fieldMap } = flq
 }
 /**后处理 */
-export function postreat(option: PostreatEvent) {
-  hooks.emit('postreat', option)
-  const { flq, data, method, connect } = option
-  console.log(data)
+export async function postreat(option: PostreatEvent) {
+  await hooks.emit('postreat', option)
+  const { flq, data } = option
   if (!Array.isArray(data)) return
   const { model: mod, fieldMap } = flq
   if (!mod) return
@@ -35,14 +34,16 @@ export function postreat(option: PostreatEvent) {
   })
   // 映射表为空
   if (!modMap.size) return
+  const ps: Set<Promise<any>> = new Set()
   // 遍历数据
   data.forEach((row: any, index: number) => {
     // 遍历字段映射表
     modMap.forEach((model, key) => {
       const value = row[key]
-      hooks.emit('model-postreat', { model, key, value, row })
+      ps.add(hooks.emit('model-postreat', { flq, model, key, value, row }))
     })
   })
+  await Promise.all(ps)
 }
 
 interface PostreatEvent {
@@ -52,10 +53,26 @@ interface PostreatEvent {
   connect: Connection
 }
 interface ModelPostreatEvent {
+  flq: Flq
   model: Partial<ModelOption.Ops>
   key: string
   value: any
   row: Record<string, any>
+}
+
+export const postreatHooks = {
+  async insertId({ flq, data, connect }: PostreatEvent) {
+    if (!flq.option.insertId) return
+    if (Array.isArray(data)) return
+    const d = await flq.query(insertId, connect)
+    data.insertId = Object.values(d[0])[0]
+  },
+  async foundRows({ flq, data, connect }: PostreatEvent) {
+    if (!flq.option.foundRows) return
+    if (!Array.isArray(data)) return
+    const d = await flq.query(foundRows, connect)
+    flq.total = Object.values(d[0])[0]
+  },
 }
 
 export const modelPostreatHooks = {
@@ -64,19 +81,17 @@ export const modelPostreatHooks = {
     if (!value) return (row[key] = [])
     row[key] = value.split(',')
   },
-}
-export const postreatHooks = {
-  async insertId({ flq, data, connect }: PostreatEvent) {
-    if (!flq.option.insertId) return
-    if (Array.isArray(data)) return
-    const d = await flq.query(insertId, connect)
-    data.insertId = Object.values(d[0])[0]
+  async postreat({ flq, model, key, value, row }: ModelPostreatEvent) {
+    if (!model.postreat) return
+    const nv = await model.postreat.call(flq, value, row)
+    row[key] = nv
   },
 }
 
-Object.values(modelPostreatHooks).forEach((e) => {
-  hooks.on('model-postreat', e)
-})
 Object.values(postreatHooks).forEach((e) => {
   hooks.on('postreat', e)
+})
+
+Object.values(modelPostreatHooks).forEach((e) => {
+  hooks.on('model-postreat', e)
 })
