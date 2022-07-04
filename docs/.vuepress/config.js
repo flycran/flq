@@ -9,9 +9,9 @@ module.exports = {
     editLinks: true,
     editLinkText: '帮助我们改善此页面！',
     nav: [
-      { text: '指南', link: '/guide' },
-      { text: 'API', link: '/api' },
-      { text: '支持', link: '/support' },
+      { text: '指南', link: '/guide/' },
+      { text: 'API', link: '/api/' },
+      { text: '支持', link: '/support/' },
     ],
     sidebar: {
       '/guide/': ['', 'introduction'],
