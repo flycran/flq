@@ -9,6 +9,7 @@ import {
   GroupOption,
   ValueOption,
   SetOption,
+  SubFieldOption,
 } from './types'
 
 const boolOpers: WhereOption.Op[] = ['AND', 'OR']
@@ -49,7 +50,7 @@ function pf(
     else flq.fieldMap.field[field] = [from, field]
   } else {
     if (flq.fieldMap.table.length === 0) {
-      console.log(`Flq.field.warning:建立字段映射时from没有确定的值,映射建立失败`)
+      console.log(`Warning!Flq.field:建立字段映射时from没有确定的值,映射建立失败`)
     } else {
       from = flq.fieldMap.table[0]
       if (as) flq.fieldMap.field[as] = [from, field]
@@ -213,4 +214,13 @@ export function set(option: SetOption): string {
     return arr.join(', ')
   }
   throw new FlqError('set: 不受支持的参数类型')
+}
+
+export function subField(option: SubFieldOption[], flq: Flq): SubFieldOption.Obj {
+  const obj: SubFieldOption.Obj = {}
+  for (let i = 0; i < option.length; i++) {
+    const e = option[i]
+
+  }
+  return obj
 }

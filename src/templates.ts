@@ -1,5 +1,4 @@
 // sql方法模板
-
 export const select = 'SELECT [foundRows] [field] FROM [from] [where] [group] [order] [limit]'
 export const update = 'UPDATE [from] SET [set] [where]'
 export const insert = 'INSERT INTO [from] [value]'

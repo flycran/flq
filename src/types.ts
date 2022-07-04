@@ -1,3 +1,4 @@
+// 公共类型声明
 import { Flq } from './index'
 
 /**连接配置 */
@@ -64,17 +65,34 @@ export interface ConnectOption {
 
 /**Flq选项描述 */
 export interface FlqOption {
+  /**表名 */
   from?: string
+  /**字段 */
   field?: string
+  /**条件 */
   where?: string
+  /**设置 */
   set?: string
+  /**插入 */
   value?: Record<string, any>
+  /**排序 */
   order?: string
+  /**分组 */
   group?: string
+  /**分页 */
   limit?: (number | void)[]
-  virtualField?: string[]
+  /**虚拟获取 */
+  virtualGet?: string[]
+  /**虚拟插入 */
+  virtualSet?: Record<string, any>
+  /**子查询 */
+  subField?: SubFieldOption.Obj
+  /**插入id */
   insertId?: boolean
+  /**完整列数 */
   foundRows?: string
+  /**强制遍历响应数据 */
+  traversal?: boolean
 }
 /**基本索引对象 */
 export type Data = Record<string, any>
@@ -139,7 +157,13 @@ export type LimitOption =
         size: number
       }
     ]
-
+/**子字段选项 */
+export namespace SubFieldOption {
+  interface Op {}
+  export type Obj = Record<string, string | Op>
+  export type Option = Obj | string
+}
+export type SubFieldOption = SubFieldOption.Option
 /**模型选项 */
 export namespace ModelOption {
   interface SubOption {
@@ -157,9 +181,9 @@ export namespace ModelOption {
     /**更新值 */
     update: ((this: Flq, value: any, data: Data) => any) | any
     /**虚拟字段获取 */
-    get: (this: Flq, data: Data) => any | Promise<any>
+    get: (this: Flq, row: Data) => any | Promise<any>
     /**虚拟字段设置 */
-    set: (this: Flq, data: Data) => void | Promise<void>
+    set: (this: Flq, value: any, row: Data) => void | Promise<void>
     /**预处理 */
     pretreat: (this: Flq, value: any, data: Data) => any | Promise<any>
     /**后处理 */

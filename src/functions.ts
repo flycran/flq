@@ -1,3 +1,4 @@
+// sql方法
 import { escape, field } from './index'
 
 const presetFunctionMap: Record<string, Function> = {

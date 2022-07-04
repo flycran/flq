@@ -1,3 +1,4 @@
+// 异步事件订阅
 /**异步事件 */
 export class AsyncEvent {
   listener: Map<string, Set<Function>> = new Map()

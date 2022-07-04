@@ -12,6 +12,7 @@ import {
   ValueOption,
   SetOption,
   ModelOption,
+  SubFieldOption,
 } from './types'
 
 export const escape = $escape
@@ -228,10 +229,10 @@ export class Flq {
     const { option: sp } = db
     db.fieldMap.table.push(...option)
     const sql = option.map((e) => methods.from(e)).join(', ')
-    if (sp.from === undefined) {
-      sp.from = sql
-    } else {
+    if (sp.from) {
       sp.from += ', ' + sql
+    } else {
+      sp.from = sql
     }
     return db
   }
@@ -240,10 +241,10 @@ export class Flq {
     const db = this.clone()
     const { option: sp } = db
     const sql = option.map((e) => methods.field(e, db)).join(', ')
-    if (sp.field === undefined) {
-      sp.field = sql
-    } else {
+    if (sp.field) {
       sp.field += ', ' + sql
+    } else {
+      sp.field = sql
     }
     return db
   }
@@ -252,10 +253,10 @@ export class Flq {
     const db = this.clone()
     const { option: sp } = db
     const sql = option.map((e) => methods.where(e)).join(' AND ')
-    if (sp.where === undefined) {
-      sp.where = sql
-    } else {
+    if (sp.where) {
       sp.where += ' AND ' + sql
+    } else {
+      sp.where = sql
     }
     return db
   }
@@ -264,10 +265,10 @@ export class Flq {
     const db = this.clone()
     const { option: sp } = db
     const sql = methods.set(option)
-    if (sp.set === undefined) {
-      sp.set = sql
-    } else {
+    if (sp.set) {
       sp.set += ', ' + sql
+    } else {
+      sp.set = sql
     }
     return db
   }
@@ -276,10 +277,10 @@ export class Flq {
     const db = this.clone()
     const { option: sp } = db
     const sql = methods.order(option, defOp)
-    if (sp.where === undefined) {
-      sp.order = sql
-    } else {
+    if (sp.where) {
       sp.where += ', ' + sql
+    } else {
+      sp.order = sql
     }
     return db
   }
@@ -294,8 +295,11 @@ export class Flq {
   value(option: ValueOption) {
     const db = this.clone()
     const { option: sp } = db
-    if (sp.value) Object.assign(sp.value, methods.value(option))
-    else sp.value = methods.value(option)
+    if (sp.value) {
+      Object.assign(sp.value, methods.value(option))
+    } else {
+      sp.value = methods.value(option)
+    }
     return db
   }
   /**分页 */
@@ -327,12 +331,32 @@ export class Flq {
     }
     throw new FlqError('Flq.page: 必须传入大于0的整数')
   }
-  /**虚拟字段 */
-  virtualField(...option: string[]) {
+  /**虚拟获取 */
+  virtualGet(...option: string[]) {
     const db = this.clone()
     const { option: sp } = db
-    if (sp.virtualField) sp.virtualField.push(...option)
-    else sp.virtualField = [...option]
+    if (sp.virtualGet) sp.virtualGet.push(...option)
+    else sp.virtualGet = [...option]
+    return db
+  }
+  /**虚拟插入 */
+  virtualSet(...option: FlqOption['virtualSet'][]) {
+    const db = this.clone()
+    const { option: sp } = db
+    if (sp.virtualSet) {
+      Object.assign(sp.virtualSet, ...option)
+      db.option.traversal = true
+    } else {
+      sp.virtualSet = Object.assign({}, ...option)
+    }
+    return db
+  }
+  /**子字段 */
+  subField(...option: SubFieldOption[]) {
+    const db = this.clone()
+    const { option: sp } = db
+    if (sp.subField) Object.assign(sp.subField, methods.subField(option, db))
+    else sp.subField = Object.assign({}, methods.subField(option, db))
     return db
   }
   /**获取上一次查询的总列数 */
