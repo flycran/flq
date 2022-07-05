@@ -21,13 +21,163 @@
 
 ## 基础查询
 
+### 演示
+
 ```js
-hooks.on('test', async (flq) => {
+hooks.on('test', async () => {
   const db = flq.from('student')
   const result = await db.find()
   console.log(result)
 })
 ```
 
+### 结果
 
+```js
+[
+  {
+    id: 1,
+    name: '张三',
+    gender: '男',
+    chinese: 86,
+    math: 78,
+    english: 65,
+    class: 2,
+    age: 11,
+    association: '1,5,6'
+  },
+  {
+    id: 2,
+    name: '李四',
+    gender: '女',
+    chinese: 56,
+    math: 56,
+    english: 23,
+    class: 1,
+    age: 12,
+    association: '2,4'
+  },
+  //...省略不必要的代码
+]
+```
 
+## 条件查询
+
+### 演示
+
+```js
+hooks.on('test', async () => {
+  const db = flq.from('student').where({gender: '女'})
+  const result = await db.find()
+  console.log(result)
+})
+```
+
+### 结果
+
+```js
+[
+  {
+    id: 2,
+    name: '李四',
+    gender: '女',
+    chinese: 56,
+    math: 56,
+    english: 23,
+    class: 1,
+    age: 12,
+    association: '2,4'
+  },
+  {
+    id: 3,
+    name: '王五',
+    gender: '女',
+    chinese: 89,
+    math: 41,
+    english: 91,
+    class: 2,
+    age: 10,
+    association: '3,6'
+  },
+  //...省略不必要的代码
+]
+```
+
+:::tip
+
+前往[API文档](/api/flq.html#where)查看`where`的详细用法
+
+::: 
+
+## 查询部分字段
+
+### 演示
+
+```js
+hooks.on('test', async () => {
+  const db = flq
+    .from('student')
+    .where({ gender: '女' })
+    .field('name', { gender: 'sex' })
+  const result = await db.find()
+  console.log(result)
+})
+```
+
+### 结果
+
+```js
+[
+  { name: '李四', sex: '女' },
+  { name: '王五', sex: '女' },
+  { name: '郑八', sex: '女' },
+  { name: '周九', sex: '女' }
+]
+```
+
+:::tip
+
+前往[API文档](/api/flq.html#field)查看`field`的详细用法
+
+::: 
+
+## 聚合
+
+### 演示
+
+```js
+hooks.on('test', async () => {
+  const db = flq.from('student').field({
+    chinese: {
+      met: 'avg',
+      as: 'chinese',
+    },
+    math: {
+      met: 'avg',
+      as: 'math',
+    },
+    english: {
+      met: 'avg',
+      as: 'english',
+    },
+  })
+  const result = await db.find()
+  console.log(result)
+})
+```
+
+### 演示
+
+```js
+[ { chinese: '77.1250', math: '69.3750', english: '66.1250' } ]
+```
+
+:::tip
+
+前往[API文档](/api/flq.html#field)查看`field`的详细用法
+
+:::
+
+## 虚拟字段
+
+。。。

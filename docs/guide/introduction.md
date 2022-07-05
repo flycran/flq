@@ -57,7 +57,7 @@ new Flq({
   database: 'test', // 数据库名
 })
 // 使用测试模式
-hooks.on('test', async (flq) => {
+hooks.on('test', async () => {
   const db = flq.from('student')
   const result = await db.find()
   console.log(result)

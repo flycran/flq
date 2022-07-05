@@ -12,7 +12,8 @@ export default defineUserConfig({
     },
     '/en/': {
       title: 'FLQ English documents',
-      description: 'Make it easy for front-end developers who lack SQL experience to interact with the database',
+      description:
+        'Make it easy for front-end developers who lack SQL experience to interact with the database',
     },
   },
   theme: defaultTheme({
@@ -20,6 +21,7 @@ export default defineUserConfig({
     repo: 'https://gitee.com/cffh/flq',
     lastUpdated: true,
     contributors: false,
+    sidebarDepth: 1,
     locales: {
       '/': theme.zh,
       '/en/': theme.en,
