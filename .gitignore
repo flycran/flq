@@ -1,5 +1,7 @@
 node_modules
 .npm
+lib
 .vscode-test
 docs/.vuepress/dist
-lib
+docs/.vuepress/.cache
+docs/.vuepress/.temp

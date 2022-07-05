@@ -2,7 +2,7 @@
 home: true
 heroImage: /hero.png
 heroText: FLQ
-tagline: 基于mysql2的数据库交互框架
+tagline: 基于mysql2的数据库交互框架（未完成，谨慎使用）
 actionText: 快速上手  ▶
 actionLink: /guide/
 lang: zh
@@ -17,11 +17,11 @@ footer: 湘ICP备2022005467号
 ---
 
 - **没有任何后端开发经验？**
-- **手写SQL语句繁琐冗长？**
+- **手写 SQL 语句繁琐冗长？**
 - **数据库的多表联合查询？**
 - **数据库的递归迭代查询？**
 
-## FLQ都能满足！
+## FLQ 都能满足！
 
 ### 步进式配置
 
@@ -30,5 +30,5 @@ footer: 湘ICP备2022005467号
 ```js
 const dbTest = db.from('test').where({ deleteAt: 1 })
 const my = await dbTest.where({ uid: 1 }).find()
-const all = await dbTest.limit({size: 10, page: 1}).find()
+const all = await dbTest.limit({ size: 10, page: 1 }).find()
 ```
