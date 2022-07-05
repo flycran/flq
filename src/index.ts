@@ -73,6 +73,7 @@ export function field(p1: string | [string, string], p2?: string): string {
 }
 /**防重名 */
 const $field = field
+/**sql解析方法 */
 namespace methods {
   const boolOpers: WhereOption.Op[] = ['AND', 'OR']
   const compOpers: WhereOption.Com[] = [
@@ -644,11 +645,11 @@ export async function postreat(option: EventParam.PostreatEvent) {
   const ps: PromiseSet = new Set()
   // 遍历数据
   data.forEach((row: any, index: number) => {
-    ps.add(hooks.emit('row-postreat', { flq, row }))
+    ps.add(hooks.emit('rowPostreat', { flq, row }))
     // 遍历字段映射表
     modMap.forEach((model, key) => {
       const value = row[key]
-      ps.add(hooks.emit('field-postreat', { flq, model, key, value, row }))
+      ps.add(hooks.emit('fieldPostreat', { flq, model, key, value, row }))
     })
   })
   await Promise.all(ps)
@@ -660,4 +661,5 @@ import * as listeners from './listeners'
 for (const key in listeners) {
   //@ts-ignore
   const event = listeners[key] as Record<string, Function>
+  Object.values(event).forEach((e) => hooks.on(key, e))
 }

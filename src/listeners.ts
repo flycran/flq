@@ -2,7 +2,7 @@ import { PromiseSet, EventParam } from './types'
 import { Flq } from './index'
 import { insertId, foundRows } from './templates'
 
-export const postreatHooks = {
+export const postreat = {
   async insertId({ flq, data, connect }: EventParam.PostreatEvent) {
     if (!flq.option.insertId) return
     if (Array.isArray(data)) return
@@ -39,7 +39,7 @@ function getModel(flq: Flq, vf: string) {
   }
 }
 
-export const rowPostreatHooks = {
+export const rowPostreat = {
   async virtualGet({ row, flq }: EventParam.RowPostreatEvent) {
     if (!flq.option.virtualGet) return
     const {
@@ -72,7 +72,7 @@ export const rowPostreatHooks = {
   },
 }
 
-export const fieldPostreatHooks = {
+export const fieldPostreat = {
   toArray({ model, field, value, row }: EventParam.ModelPostreatEvent) {
     if (!model.toArray) return
     if (!value) return (row[field] = [])

@@ -1,14 +1,27 @@
 const { Flq, hooks } = require('../lib')
 
-new Flq({
+const flq = new Flq({
   pool: true, // 使用连接池 !推荐使用
   user: 'root', // 登陆用户
   password: process.env.SQLPASSWORD, // 登陆密码
   database: 'test', // 数据库名
 })
 
-hooks.on('test', async (flq) => {
-  const db = flq.from('student')
+hooks.on('test', async () => {
+  const db = flq.from('student').field({
+    chinese: {
+      met: 'avg',
+      as: 'chinese',
+    },
+    math: {
+      met: 'avg',
+      as: 'math',
+    },
+    english: {
+      met: 'avg',
+      as: 'english',
+    },
+  })
   const result = await db.find()
   console.log(result)
 })
