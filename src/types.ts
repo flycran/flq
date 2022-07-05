@@ -1,5 +1,6 @@
 // 公共类型声明
 import { Flq } from './index'
+import {  Connection } from 'mysql2'
 
 /**连接配置 */
 export interface ConnectOption {
@@ -198,3 +199,26 @@ export namespace ModelOption {
   export type Option = Record<string, Record<string, Partial<Ops>>>
 }
 export type ModelOption = ModelOption.Option
+
+export type PromiseSet<T = any> = Set<Promise<T>>
+
+export namespace EventParam {
+  export interface PostreatEvent {
+    flq: Flq
+    data: Data[] | Data
+    method: string
+    connect: Connection
+  }
+  export interface RowPostreatEvent {
+    flq: Flq
+    row: Record<string, any>
+  }
+  export interface ModelPostreatEvent {
+    flq: Flq
+    fields: string[]
+    model: Partial<ModelOption.Ops>
+    field: string
+    value: any
+    row: Record<string, any>
+  }
+}
