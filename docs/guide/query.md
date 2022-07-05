@@ -18,3 +18,16 @@
 | 8    | 孙十 | 男     | 58      | 63   | 75      | 4     | 13   | 1,2         |
 
 你可用在[演示表格](/table/student.html)处找到此表的sql语句。
+
+## 基础查询
+
+```js
+hooks.on('test', async (flq) => {
+  const db = flq.from('student')
+  const result = await db.find()
+  console.log(result)
+})
+```
+
+
+
