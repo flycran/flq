@@ -1,4 +1,4 @@
-const { Flq, hooks } = require('../lib')
+const { Flq } = require('../lib')
 
 const flq = new Flq({
   pool: true, // 使用连接池 !推荐使用

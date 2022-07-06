@@ -1,5 +1,6 @@
 import {Connection, createConnection, createPool, escape as $escape, Pool,} from 'mysql2'
 import {AsyncEvent} from './event'
+
 import {
   ConnectOption,
   EventParam,
