@@ -25,7 +25,7 @@ import {
 /**安全处理 */
 export const escape = $escape
 /**格式化需要的正则表达式 */
-const FORMATREG = /\[(.+?)\]/g
+const FORMATREG = / \[(.+?)\]/g
 const RGE = /^.+\(.*?\)$/
 /**sql模板 */
 import * as templates from './templates'
@@ -123,7 +123,7 @@ namespace methods {
       f = f + ' as ' + escape(as)
     }
     this.fieldMap.field[as || field] = [tb]
-    return ''
+    return f
   }
 
   export function from(this: Flq, ...option: FromOption[]): string {
@@ -139,32 +139,31 @@ namespace methods {
       .join(', ')
   }
 
-  type PolyMet = 'AVG' | 'COUNT' | 'MAX' | 'MIN' | 'SUM'
+  const polyMet = new Set(['AVG', 'COUNT', 'MAX', 'MIN', 'SUM'])
 
-  export function field(this: Flq, option: FieldOption, met?: PolyMet): string {
-    if (typeof option === 'string') return fieldM.call(this, option)
-    let r: any[] = []
+  export function field(
+    this: Flq,
+    option: FieldOption,
+    met?: FieldOption.PolyMet
+  ): string {
+    if (typeof option === 'string')
+      return fieldM.call(this, option, undefined, met)
     if (Array.isArray(option)) {
-      if (option.length < 2)
-        throw new FlqError(
-          `methods.field: 不受支持的参数类型:${JSON.stringify(option)}`
-        )
-      return fieldM.call(this, ...option)
+      return option.map((e) => field.call(this, e, met)).join(', ')
     }
     if (typeof option === 'object') {
       let r: any[] = []
       for (const key in option) {
         const e = option[key]
-        let f: string
-        if (Array.isArray(e)) {
-          f = fieldM.call(this, key, e[1], e[0])
-        } else if (typeof e === 'object') {
-          f = fieldM.call(this, key, e.as, e.met)
+        if (polyMet.has(key)) {
+          r.push(field.call(this, e, key as FieldOption.PolyMet))
+        } else if (Array.isArray(e)) {
+          //@ts-ignore
+          r.push(fieldM.call(this, key, e[1], e[0]))
         } else {
           //@ts-ignore
-          f = fieldM.call(this, key, e, this)
+          r.push(fieldM.call(this, key, e, met))
         }
-        r.push(f)
       }
       return r.join(', ')
     }
@@ -238,13 +237,15 @@ namespace methods {
     )
   }
 
-  export function order(option: OrderOption, defOp?: OrderOption.Op) {
+  const orderOp = new Set(['DESC', 'ACS', '1', '-1'])
+
+  export function order(option: OrderOption, defOp?: OrderOption.Op): string {
     if (typeof option === 'string') {
-      if (!defOp || defOp === 'ACS' || defOp === 1) return $field(option)
+      if (!defOp || defOp === 'ACS' || defOp == '1') return $field(option)
       return $field(option) + ' DESC'
     }
     if (Array.isArray(option)) {
-      if (!defOp || defOp === 'ACS' || defOp === 1)
+      if (!defOp || defOp === 'ACS' || defOp == '1')
         return option.map((e) => $field(e)).join(', ')
       return option.map((e) => $field(e) + ' DESC').join(', ')
     }
@@ -252,8 +253,10 @@ namespace methods {
       const arr = []
       for (const key in option) {
         //@ts-ignore
-        const op = option[key]
-        if (op === 'ACS' || op === 1) arr.push($field(key))
+        const v = option[key]
+        if (orderOp.has(key)) {
+          arr.push(order(v, key as OrderOption.Op))
+        } else if (v === 'ACS' || v == '1') arr.push($field(key))
         else arr.push($field(key) + ' DESC')
       }
       return arr.join(', ')
@@ -266,17 +269,30 @@ namespace methods {
   export function limit(option: LimitOption): number[] {
     if (option instanceof Array) {
       const [lim, off] = option
+
       if (typeof lim === 'object') {
+        if (typeof lim.page !== 'number' || typeof lim.page !== 'number')
+          throw new FlqError(
+            `limit: 不受支持的参数类型:${JSON.stringify(option)}`
+          )
         return [(lim.page - 1) * lim.size, lim.size]
       }
       if (lim > 0 && !off) {
+        if (typeof lim !== 'number')
+          throw new FlqError(
+            `limit: 不受支持的参数类型:${JSON.stringify(option)}`
+          )
         return [lim]
       }
-      if (!off)
+      if (typeof off !== 'number')
         throw new FlqError(
           `limit: 不受支持的参数类型:${JSON.stringify(option)}`
         )
       if (lim > 0 && off > 1) {
+        if (typeof lim !== 'number' || typeof off !== 'number')
+          throw new FlqError(
+            `limit: 不受支持的参数类型:${JSON.stringify(option)}`
+          )
         return [lim, off]
       }
       throw new FlqError(`limit: 不受支持的参数类型:${JSON.stringify(option)}`)
@@ -325,6 +341,41 @@ namespace methods {
     return obj
   }
 }
+
+function slot(e: string, v: any) {
+  switch (e) {
+    case 'value':
+      //@ts-ignore
+      const k = Object.keys(v)
+      //@ts-ignore
+      const l = Object.values(v)
+      return `(${k.join(', ')}) VALUES (${l.join(', ')})`
+    case 'from':
+      if (!v) throw new FlqError('Flq.format:from为必选参数')
+      return v
+    case 'field':
+      if (!v) return '*'
+      return v
+    case 'where':
+      if (!v) return
+      return 'WHERE ' + v
+    case 'order':
+      if (!v) return
+      return 'ORDER BY ' + v
+    case 'limit':
+      if (!v) return
+      return 'LIMIT ' + v.join(', ')
+    case 'group':
+      if (!v) return
+      return 'GROUP BY ' + v
+    case 'value':
+      if (!v) return
+      return `(${Object.keys(v).join(', ')}) VALUES (${Object.values(', ')})`
+    default:
+      return v
+  }
+}
+
 /**Flq */
 export class Flq {
   constructor(option: ConnectOption, model?: ModelOption) {
@@ -409,40 +460,9 @@ export class Flq {
     const sql = rsql.replace(FORMATREG, (a: string, e: string) => {
       //@ts-ignore
       const v = this.option[e]
-      switch (e) {
-        case 'value':
-          //@ts-ignore
-          const k = Object.keys(v)
-          //@ts-ignore
-          const l = Object.values(v)
-          return `(${k.join(', ')}) VALUES (${l.join(', ')})`
-        case 'from':
-          if (!v) throw new FlqError('Flq.format:from为必选参数')
-          return v
-        case 'field':
-          if (!v) return '*'
-          return v
-        case 'where':
-          if (!v) return ''
-          return 'WHERE ' + v
-        case 'order':
-          if (!v) return ''
-          return 'ORDER BY ' + v
-        case 'limit':
-          if (!v) return ''
-          return 'LIMIT ' + v.join(', ')
-        case 'group':
-          if (!v) return ''
-          return 'GROUP BY ' + v
-        case 'value':
-          if (!v) return ''
-          return `(${Object.keys(v).join(', ')}) VALUES (${Object.values(
-            ', '
-          )})`
-        default:
-          if (!v) return ''
-          return v
-      }
+      const s = slot(e, v)
+      if (!s) return ''
+      return ' ' + s
     })
     this.sql = sql
     hooks.emit('format', sql)
@@ -528,12 +548,12 @@ export class Flq {
     return db
   }
   /**排序 */
-  order(option: OrderOption, defOp: OrderOption.Op) {
+  order(option: OrderOption, defOp?: OrderOption.Op) {
     const db = this.clone()
     const { option: sp } = db
     const sql = methods.order(option, defOp)
-    if (sp.where) {
-      sp.where += ', ' + sql
+    if (sp.order) {
+      sp.order += ', ' + sql
     } else {
       sp.order = sql
     }

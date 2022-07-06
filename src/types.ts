@@ -1,6 +1,6 @@
 // 公共类型声明
 import { Flq } from './index'
-import {  Connection } from 'mysql2'
+import { Connection } from 'mysql2'
 
 /**连接配置 */
 export interface ConnectOption {
@@ -117,7 +117,10 @@ export namespace WhereOption {
     | 'in'
     | 'not in'
     | 'regexp'
-  type Condition = [string, any] | [string, Com, any] | [string, 'between', any, any]
+  type Condition =
+    | [string, any]
+    | [string, Com, any]
+    | [string, 'between', any, any]
   type WhereOp = Partial<{ [Key in Op]: Option }>
   type WhereObj = Record<string, [Com, any] | any>
   export type Option = (WhereOp & WhereObj) | Condition | string
@@ -125,20 +128,18 @@ export namespace WhereOption {
 export type WhereOption = WhereOption.Option
 /**查询字段 */
 export namespace FieldOption {
-  interface Ops {
-    as?: string
-    met?: string
-    from?: string
-  }
-  type FieldObj = Record<string, string | Ops>
-  type FieldArr = [string, string] | [string, string, string]
+  export type PolyMet = 'AVG' | 'COUNT' | 'MAX' | 'MIN' | 'SUM'
+  type FieldObj = { [x: PolyMet | string]: Option | string | [string, string] }
+  type FieldArr = (string | FieldObj)[]
   export type Option = string | FieldObj | FieldArr
 }
 export type FieldOption = FieldOption.Option
 /**排序 */
 export namespace OrderOption {
-  export type Op = 'ACS' | 'DESC' | 1 | -1
-  export type Option = string | Record<string, Op> | string[]
+  export type Op = 'ACS' | 'DESC' | '1' | '-1'
+  type OrderObj = { [x: Op | string]: Option | string }
+  type OrderArr = string[]
+  export type Option = string | OrderObj | OrderArr
 }
 export type OrderOption = OrderOption.Option
 /**分组 */
@@ -169,7 +170,6 @@ export type SubFieldOption = SubFieldOption.Option
 export namespace ModelOption {
   interface SubOption {
     field: string
-
     rename: string
   }
   type SubJoin = Record<string, string | SubOption>
