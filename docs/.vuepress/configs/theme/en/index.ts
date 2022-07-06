@@ -12,14 +12,14 @@ export const en: DefaultThemeOptions = {
   notFound: ['This page was captured by aliens'],
   backToHome: 'Return to home',
   navbar: [
-    { text: 'guide', link: '/en/guide/introduce' },
-    { text: 'API', link: '/en/api/flq' },
-    { text: 'Presentation form', link: '/en/table/student' },
+    { text: 'guide', link: '/en/guide/' },
+    { text: 'API', link: '/en/api/' },
+    { text: 'Presentation form', link: '/en/table/' },
     { text: 'support', link: '/en/support' },
   ],
   sidebar: {
-    '/en/guide/': ['introduce', 'introduction', 'query'],
-    '/en/api/': ['flq', 'model'],
-    '/en/table/': ['student'],
+    '/guide/': ['readme.md', 'introduction.md', 'query.md'],
+    '/api/': ['readme.md', 'model.md'],
+    '/table/': ['readme.md'],
   },
 }

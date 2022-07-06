@@ -12,14 +12,14 @@ export const zh: DefaultThemeOptions = {
   notFound: ['此页面被外星人抓走了'],
   backToHome: '返回首页',
   navbar: [
-    { text: '指南', link: '/guide/introduce' },
-    { text: 'API', link: '/api/flq' },
-    { text: '演示表格', link: '/table/student' },
+    { text: '指南', link: '/guide/' },
+    { text: 'API', link: '/api/' },
+    { text: '演示表格', link: '/table/' },
     { text: '支持', link: '/support' },
   ],
   sidebar: {
-    '/guide/': ['introduce', 'introduction', 'query'],
-    '/api/': ['flq', 'model'],
-    '/table/': ['student'],
+    '/guide/': ['readme.md', 'introduction.md', 'query.md'],
+    '/api/': ['readme.md', 'model.md'],
+    '/table/': ['readme.md'],
   },
 }
