@@ -1,4 +1,10 @@
-import { createConnection, createPool, Connection, Pool, escape as $escape } from 'mysql2'
+import {
+  createConnection,
+  createPool,
+  Connection,
+  Pool,
+  escape as $escape,
+} from 'mysql2'
 import { AsyncEvent } from './event'
 import {
   FlqOption,
@@ -56,18 +62,19 @@ function deepClone<T>(target: T): T {
   return target
 }
 function pf(n: string) {
-  if (n.includes('`')) throw new FlqError(`非法的字段名"${n}"，字段名不允许包含反引号"\`"`)
+  if (n.includes('`'))
+    throw new FlqError(`非法的字段名"${n}"，字段名不允许包含反引号"\`"`)
   return '`' + n + '`'
 }
 /**预处理字段名 */
 export function field(field: string): string
 export function field(from: string, field: string): string
-export function field(param: [string, string]): string
-export function field(p1: string | [string, string], p2?: string): string {
-  if (Array.isArray(p1)) return field(...p1)
+export function field(p1: any, p2?: any): string {
   if (p2) {
     return pf(p1) + '.' + pf(p2)
   }
+  const fs = p1.split('.')
+  if (fs.length > 1) return field(fs[0], fs[1])
   if (RGE.test(p1)) return p1
   return pf(p1)
 }
@@ -93,85 +100,101 @@ namespace methods {
     'regexp',
   ]
   /**处理字段,并建立字段映射 */
-  function pf(
-    { from, field, as, met }: { from?: string | void; field: string; as?: string; met?: string },
-    flq: Flq
-  ) {
-    /**最后返回的字段，默认不影响映射建立 */
-    let f: string
-    f = from ? $field(from, field) : $field(field)
-    if (met) {
-      // 如果存在聚合方法，则影响映射建立
-      f = `${met.toUpperCase()}(${field})`
-      field = f
-    }
-    // 存在则重命名
-    //@ts-ignore
-    if (as) f = field + ' as ' + $field(as)
-    if (from) {
-      if (as) flq.fieldMap.field[as] = [from, field]
-      else flq.fieldMap.field[field] = [from, field]
+  function fieldM(this: Flq, field: string, as?: string, met?: string): string {
+    const fs = field.split('.')
+    let f, tb
+    if (fs.length > 1) {
+      f = pf(fs[0]) + '.' + pf(fs[1])
+      tb = fs[0]
+      field = fs[0]
     } else {
-      if (flq.fieldMap.table.length === 0) {
-        console.log(`Warning!Flq.field:建立字段映射时from没有确定的值,映射建立失败`)
-      } else {
-        from = flq.fieldMap.table[0]
-        if (as) flq.fieldMap.field[as] = [from, field]
-        else flq.fieldMap.field[field] = [from, field]
-      }
+      f = pf(fs[0])
+      tb = this.fieldMap.table[0]
+      if (!tb)
+        console.log(
+          `Warning!Flq.field:建立字段映射时无法确定from的值,映射建立失败`
+        )
     }
-    return f
+    if (met) {
+      f = `${met.toUpperCase()}(${f})`
+      if (!as) as = field
+    }
+    if (as) {
+      f = f + ' as ' + escape(as)
+    }
+    this.fieldMap.field[as || field] = [tb]
+    return ''
   }
 
-  export function from(option: FromOption): string {
+  export function from(this: Flq, ...option: FromOption[]): string {
+    this.fieldMap.table.push(...option)
     //@ts-ignore
-    if (typeof option === 'string') return $field(option)
-    throw new FlqError(`methods.from: 不受支持的参数类型:${JSON.stringify(option)}`)
+    return option
+      .map((e) => {
+        if (typeof e === 'string') return $field(e)
+        throw new FlqError(
+          `methods.from: 不受支持的参数类型:${JSON.stringify(option)}`
+        )
+      })
+      .join(', ')
   }
 
-  export function field(option: FieldOption, flq: Flq): string {
-    if (typeof option === 'string') return pf({ field: option }, flq)
+  type PolyMet = 'AVG' | 'COUNT' | 'MAX' | 'MIN' | 'SUM'
+
+  export function field(this: Flq, option: FieldOption, met?: PolyMet): string {
+    if (typeof option === 'string') return fieldM.call(this, option)
     let r: any[] = []
     if (Array.isArray(option)) {
       if (option.length < 2)
-        throw new FlqError(`methods.field: 不受支持的参数类型:${JSON.stringify(option)}`)
-      if (option.length === 2) {
-        return pf({ field: option[0], as: option[1] }, flq)
-      } else {
-        return pf({ from: option[0], field: option[1], as: option[2] }, flq)
-      }
+        throw new FlqError(
+          `methods.field: 不受支持的参数类型:${JSON.stringify(option)}`
+        )
+      return fieldM.call(this, ...option)
     }
     if (typeof option === 'object') {
       let r: any[] = []
       for (const key in option) {
         const e = option[key]
         let f: string
-        if (typeof e === 'object') {
-          f = pf({ ...e, field: key }, flq)
+        if (Array.isArray(e)) {
+          f = fieldM.call(this, key, e[1], e[0])
+        } else if (typeof e === 'object') {
+          f = fieldM.call(this, key, e.as, e.met)
         } else {
           //@ts-ignore
-          f = pf({ field: key, as: e }, flq)
+          f = fieldM.call(this, key, e, this)
         }
         r.push(f)
       }
       return r.join(', ')
     }
-    throw new FlqError(`methods.field: 不受支持的参数类型:${JSON.stringify(option)}`)
+    throw new FlqError(
+      `methods.field: 不受支持的参数类型:${JSON.stringify(option)}`
+    )
   }
 
-  export function where(option: WhereOption, op: WhereOption.Op = 'AND'): string {
+  export function where(
+    option: WhereOption,
+    op: WhereOption.Op = 'AND'
+  ): string {
     if (typeof option === 'string') return option
     if (Array.isArray(option)) {
       if (option.length < 2)
-        throw new FlqError(`methods.field: 不受支持的参数类型:${JSON.stringify(option)}`)
+        throw new FlqError(
+          `methods.field: 不受支持的参数类型:${JSON.stringify(option)}`
+        )
       if (option.length === 2) {
         return $field(option[0]) + ' = ' + escape(option[1])
       } else {
         let op = option[1]
         if (!compOpers.includes(op))
-          throw new FlqError(`methods.field: 不受支持的比较运算符:"${option[1]}"`)
+          throw new FlqError(
+            `methods.field: 不受支持的比较运算符:"${option[1]}"`
+          )
         if (op === 'between') {
-          return `${$field(option[0])} BETWEEN ${escape(option[2])} AND ${escape(option[3])}`
+          return `${$field(option[0])} BETWEEN ${escape(
+            option[2]
+          )} AND ${escape(option[3])}`
         }
         if (op === 'in' || op === 'not in') {
           if (!Array.isArray(option[2]))
@@ -180,7 +203,9 @@ namespace methods {
                 option[2]
               )}`
             )
-          return `${$field(option[0])} ${op} (${option[2].map((e: any) => escape(e)).join(', ')})`
+          return `${$field(option[0])} ${op} (${option[2]
+            .map((e: any) => escape(e))
+            .join(', ')})`
         }
         //@ts-ignore
         op = op.toUpperCase()
@@ -208,7 +233,9 @@ namespace methods {
       }
       return ws.join(' ' + op + ' ')
     }
-    throw new FlqError(`methods.where: 不受支持的参数类型:${JSON.stringify(option)}`)
+    throw new FlqError(
+      `methods.where: 不受支持的参数类型:${JSON.stringify(option)}`
+    )
   }
 
   export function order(option: OrderOption, defOp?: OrderOption.Op) {
@@ -217,7 +244,8 @@ namespace methods {
       return $field(option) + ' DESC'
     }
     if (Array.isArray(option)) {
-      if (!defOp || defOp === 'ACS' || defOp === 1) return option.map((e) => $field(e)).join(', ')
+      if (!defOp || defOp === 'ACS' || defOp === 1)
+        return option.map((e) => $field(e)).join(', ')
       return option.map((e) => $field(e) + ' DESC').join(', ')
     }
     if (typeof option === 'object') {
@@ -230,7 +258,9 @@ namespace methods {
       }
       return arr.join(', ')
     }
-    throw new FlqError(`methods.order: 不受支持的参数类型:${JSON.stringify(option)}`)
+    throw new FlqError(
+      `methods.order: 不受支持的参数类型:${JSON.stringify(option)}`
+    )
   }
 
   export function limit(option: LimitOption): number[] {
@@ -242,7 +272,10 @@ namespace methods {
       if (lim > 0 && !off) {
         return [lim]
       }
-      if (!off) throw new FlqError(`limit: 不受支持的参数类型:${JSON.stringify(option)}`)
+      if (!off)
+        throw new FlqError(
+          `limit: 不受支持的参数类型:${JSON.stringify(option)}`
+        )
       if (lim > 0 && off > 1) {
         return [lim, off]
       }
@@ -281,7 +314,10 @@ namespace methods {
     throw new FlqError('set: 不受支持的参数类型')
   }
 
-  export function subField(option: SubFieldOption[], flq: Flq): SubFieldOption.Obj {
+  export function subField(
+    option: SubFieldOption[],
+    flq: Flq
+  ): SubFieldOption.Obj {
     const obj: SubFieldOption.Obj = {}
     for (let i = 0; i < option.length; i++) {
       const e = option[i]
@@ -301,11 +337,6 @@ export class Flq {
       this.connection = createConnection(option)
     }
     this.model = model
-    setTimeout(() => {
-      if (hooks.listener.has('test')) {
-        hooks.emit('test', this).then(() => this.end())
-      }
-    }, 0)
   }
   /**sql参数 */
   option: FlqOption = {}
@@ -324,6 +355,11 @@ export class Flq {
   pool?: Pool
   /**最后操作的条数 */
   total?: number
+  /**测试 */
+  async test(callBack: (flq: Flq) => Promise<any>) {
+    await callBack(this)
+    this.end()
+  }
   /**获取连接 */
   getConnect(): Connection | Promise<Connection> {
     const { pool } = this
@@ -349,7 +385,10 @@ export class Flq {
     })
   }
   /**查询 */
-  query(sql: string, connection?: Connection | Pool): Promise<Record<string, any>[]> {
+  query(
+    sql: string,
+    connection?: Connection | Pool
+  ): Promise<Record<string, any>[]> {
     return new Promise(async (e, r) => {
       if (!connection) connection = await this.getConnect()
       connection.query(sql, (err, data) => {
@@ -397,7 +436,9 @@ export class Flq {
           return 'GROUP BY ' + v
         case 'value':
           if (!v) return ''
-          return `(${Object.keys(v).join(', ')}) VALUES (${Object.values(', ')})`
+          return `(${Object.keys(v).join(', ')}) VALUES (${Object.values(
+            ', '
+          )})`
         default:
           if (!v) return ''
           return v
@@ -442,8 +483,7 @@ export class Flq {
   from(...option: FromOption[]) {
     const db = this.clone()
     const { option: sp } = db
-    db.fieldMap.table.push(...option)
-    const sql = option.map((e) => methods.from(e)).join(', ')
+    const sql = option.map((e) => methods.from.call(db, e)).join(', ')
     if (sp.from) {
       sp.from += ', ' + sql
     } else {
@@ -455,7 +495,7 @@ export class Flq {
   field(...option: FieldOption[]) {
     const db = this.clone()
     const { option: sp } = db
-    const sql = option.map((e) => methods.field(e, db)).join(', ')
+    const sql = option.map((e) => methods.field.call(db, e)).join(', ')
     if (sp.field) {
       sp.field += ', ' + sql
     } else {
@@ -540,7 +580,8 @@ export class Flq {
     const { option: sp } = db
     if (page > 0) {
       const { limit } = sp
-      if (!limit || !limit[1]) throw new FlqError('Flq.page: 必须先设置每页条数')
+      if (!limit || !limit[1])
+        throw new FlqError('Flq.page: 必须先设置每页条数')
       limit[0] = (page - 1) * limit[1]
       return db
     }
@@ -610,7 +651,12 @@ export class Flq {
 }
 
 /**预处理 */
-export function pretreat(option: { flq: Flq; from: string; field: string; value: any }) {
+export function pretreat(option: {
+  flq: Flq
+  from: string
+  field: string
+  value: any
+}) {
   hooks.emit('pretreat', option)
   const { flq, from, field, value } = option
   const { model, fieldMap } = flq
@@ -639,7 +685,6 @@ export async function postreat(option: EventParam.PostreatEvent) {
       if (m2) modMap.set(f, m2)
     })
   }
-
   // 映射表为空且没有强制遍历
   if (!modMap.size && !traversal) return
   const ps: PromiseSet = new Set()
