@@ -1,10 +1,14 @@
 # flq
 
-- 基于 mysql2 的步进式数据库交互框架
+- Node 与数据库交互的应用层解决方案
 
 - 让缺乏 SQL 语句经验的前端开发者也可以轻松与数据库交互
 
-- 下面是一个基本的示例
+- 前往[FLQ 中文文档](https://flq.flycran.xyz)查看完整文档
+
+- 前往[FLQ English documents](https://flq.flycran.xyz/en/)View full documentation
+
+## 基本查询
 
 ```js
 const { Flq, hooks } = require('flq')
@@ -16,11 +20,45 @@ const flq = new Flq({
   database: 'test', // 数据库名
 })
 // 使用测试模式
-hooks.on('test', async () => {
+flq.test(async () => {
   const db = flq.from('student')
   const result = await db.find()
   console.log(result)
 })
 ```
 
-前往[FLQ主页](https://flq.flycran.xyz)查看完整文档
+## 分组聚合
+
+```js
+flq.test(async () => {
+  const db = flq
+    .from('student')
+    .field(
+      {
+        AVG: ['chinese', 'math', 'english'],
+      },
+      'gender'
+    )
+    // group 分组
+    .group('gender')
+  const result = await db.find()
+  console.log(db.sql)
+  console.log(result)
+})
+```
+
+## 总列数
+
+```js
+flq.test(async () => {
+  const db = flq
+    .from('student')
+    .field('name', 'age', 'chinese', 'math', 'english')
+    .limit({ page: 1, size: 3 })
+    .foundRows()
+  const result = await db.find()
+  console.log(db.sql)
+  console.log(result)
+  console.log('总列数:', db.total);
+})
+```
