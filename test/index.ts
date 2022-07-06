@@ -1,4 +1,4 @@
-const { Flq } = require('../lib')
+const {Flq} = require('../lib')
 
 const flq = new Flq({
   pool: true, // 使用连接池 !推荐使用
@@ -9,7 +9,7 @@ const flq = new Flq({
 
 flq.test(async () => {
   const db = flq.from('student').field({
-    AVG: { chinese: '语文', math: '数学', english: '英语' },
+    AVG: {chinese: '语文', math: '数学', english: '英语'},
   })
   const result = await db.find()
   console.log(db.sql)

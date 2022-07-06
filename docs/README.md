@@ -23,7 +23,7 @@ footer: 湘ICP备2022005467号
 - **数据库的多表联合查询？**
 - **数据库的递归迭代查询？**
 
-## FLQ 都能满足！
+## FLQ ![npm type definitions](https://img.shields.io/npm/types/flq) 都能满足！
 
 ### 步进式配置
 
