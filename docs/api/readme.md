@@ -86,3 +86,7 @@
 - **option**
 
   传入分组的字段即可
+
+```js
+group('gender')
+```

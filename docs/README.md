@@ -5,7 +5,7 @@ heroText: FLQ
 tagline: Node与数据库交互的应用层解决方案（未完成，谨慎使用）
 actions: 
   - text: 快速上手  ▶
-    link: /guide/introduce
+    link: /guide/
     type: primary
 lang: zh
 features:

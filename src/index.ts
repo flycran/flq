@@ -1,42 +1,42 @@
+import {Connection, createConnection, createPool, escape as $escape, Pool,} from 'mysql2'
+import {AsyncEvent} from './event'
 import {
-  createConnection,
-  createPool,
-  Connection,
-  Pool,
-  escape as $escape,
-} from 'mysql2'
-import { AsyncEvent } from './event'
-import {
-  FlqOption,
-  PromiseSet,
   ConnectOption,
-  FromOption,
-  WhereOption,
-  FieldOption,
-  OrderOption,
-  LimitOption,
-  GroupOption,
-  ValueOption,
-  SetOption,
-  ModelOption,
-  SubFieldOption,
   EventParam,
+  FieldOption,
+  FlqOption,
+  FromOption,
+  GroupOption,
+  LimitOption,
+  ModelOption,
+  OrderOption,
+  PromiseSet,
+  SetOption,
+  SubFieldOption,
+  ValueOption,
+  WhereOption,
 } from './types'
+/**sql模板 */
+import * as templates from './templates'
+// 绑定内置事件侦听器
+import * as listeners from './listeners'
+
 /**安全处理 */
 export const escape = $escape
 /**格式化需要的正则表达式 */
-const FORMATREG = / \[(.+?)\]/g
+const FORMATREG = / \[(.+?)]/g
 const RGE = /^.+\(.*?\)$/
-/**sql模板 */
-import * as templates from './templates'
+
 /**钩子 */
 export const hooks = new AsyncEvent()
+
 /**Flq抛出错误 */
 export class FlqError extends Error {
   constructor(msg: string) {
     super(msg)
   }
 }
+
 /**深拷贝 */
 function deepClone<T>(target: T): T {
   const targetType = typeof target
@@ -61,11 +61,13 @@ function deepClone<T>(target: T): T {
   }
   return target
 }
+
 function pf(n: string) {
   if (n.includes('`'))
     throw new FlqError(`非法的字段名"${n}"，字段名不允许包含反引号"\`"`)
   return '`' + n + '`'
 }
+
 /**预处理字段名 */
 export function field(field: string): string
 export function field(from: string, field: string): string
@@ -78,6 +80,7 @@ export function field(p1: any, p2?: any): string {
   if (RGE.test(p1)) return p1
   return pf(p1)
 }
+
 /**防重名 */
 const $field = field
 /**sql解析方法 */
@@ -99,6 +102,7 @@ namespace methods {
     'not in',
     'regexp',
   ]
+
   /**处理字段,并建立字段映射 */
   function fieldM(this: Flq, field: string, as?: string, met?: string): string {
     const fs = field.split('.')
@@ -131,10 +135,7 @@ namespace methods {
     //@ts-ignore
     return option
       .map((e) => {
-        if (typeof e === 'string') return $field(e)
-        throw new FlqError(
-          `methods.from: 不受支持的参数类型:${JSON.stringify(option)}`
-        )
+        return $field(e)
       })
       .join(', ')
   }
@@ -266,38 +267,24 @@ namespace methods {
     )
   }
 
-  export function limit(option: LimitOption): number[] {
-    if (option instanceof Array) {
-      const [lim, off] = option
+  function pl(p: any) {
+    const a = Number(p)
+    if (isNaN(a) || a < 0)
+      throw new FlqError(
+        `limit: 不受支持的参数类型:${JSON.stringify(p)}`
+      )
+    return a
+  }
 
-      if (typeof lim === 'object') {
-        if (typeof lim.page !== 'number' || typeof lim.page !== 'number')
-          throw new FlqError(
-            `limit: 不受支持的参数类型:${JSON.stringify(option)}`
-          )
-        return [(lim.page - 1) * lim.size, lim.size]
-      }
-      if (lim > 0 && !off) {
-        if (typeof lim !== 'number')
-          throw new FlqError(
-            `limit: 不受支持的参数类型:${JSON.stringify(option)}`
-          )
-        return [lim]
-      }
-      if (typeof off !== 'number')
-        throw new FlqError(
-          `limit: 不受支持的参数类型:${JSON.stringify(option)}`
-        )
-      if (lim > 0 && off > 1) {
-        if (typeof lim !== 'number' || typeof off !== 'number')
-          throw new FlqError(
-            `limit: 不受支持的参数类型:${JSON.stringify(option)}`
-          )
-        return [lim, off]
-      }
-      throw new FlqError(`limit: 不受支持的参数类型:${JSON.stringify(option)}`)
+  export function limit(option: LimitOption): number[] {
+    const [lim, off] = option
+    if (typeof lim === 'object') {
+      return [pl((lim.page - 1) * lim.size), pl(lim.size)]
     }
-    throw new FlqError(`limit: 不受支持的参数类型:${JSON.stringify(option)}`)
+    if (!off) {
+      return [pl(lim)]
+    }
+    return [pl(lim), pl(off)]
   }
 
   export function group(option: GroupOption): string {
@@ -332,7 +319,6 @@ namespace methods {
 
   export function subField(
     option: SubFieldOption[],
-    flq: Flq
   ): SubFieldOption.Obj {
     const obj: SubFieldOption.Obj = {}
     for (let i = 0; i < option.length; i++) {
@@ -368,9 +354,6 @@ function slot(e: string, v: any) {
     case 'group':
       if (!v) return
       return 'GROUP BY ' + v
-    case 'value':
-      if (!v) return
-      return `(${Object.keys(v).join(', ')}) VALUES (${Object.values(', ')})`
     default:
       return v
   }
@@ -389,6 +372,7 @@ export class Flq {
     }
     this.model = model
   }
+
   /**sql参数 */
   option: FlqOption = {}
   /**字段映射 */
@@ -406,14 +390,16 @@ export class Flq {
   pool?: Pool
   /**最后操作的条数 */
   total?: number
+
   /**测试 */
   async test(callBack: (flq: Flq) => Promise<any>) {
     await callBack(this)
-    this.end()
+    await this.end()
   }
+
   /**获取连接 */
   getConnect(): Connection | Promise<Connection> {
-    const { pool } = this
+    const {pool} = this
     if (pool) {
       return new Promise((e, r) => {
         pool.getConnection((err, ctn) => {
@@ -425,6 +411,7 @@ export class Flq {
     //@ts-ignore
     return this.connection
   }
+
   /**结束连接 */
   end() {
     return new Promise((e, r) => {
@@ -435,6 +422,7 @@ export class Flq {
       this.pool ? this.pool.end(callBack) : this.connection?.end(callBack)
     })
   }
+
   /**查询 */
   query(
     sql: string,
@@ -449,6 +437,7 @@ export class Flq {
       })
     })
   }
+
   /**
    * 格式化为sql语句
    * @param method 格式方法
@@ -468,26 +457,28 @@ export class Flq {
     hooks.emit('format', sql)
     return sql
   }
+
   /**
    * 发送sql语句, 并根据模型处理数据
    * @param method 格式方法
    * @returns 数据
    */
   async send(method: string) {
-    const { option } = this
+    const {option} = this
     //@ts-ignore
     const ctn: Connection = await this.getConnect()
     const sql = this.format(method)
     const data: any = await this.query(sql, ctn)
-    await postreat({ flq: this, data, method, connect: ctn })
+    await postreat({flq: this, data, method, connect: ctn})
     // 释放连接
     if (this.pool) {
       //@ts-ignore
       ctn.release()
     }
-    hooks.emit('send', { data, method, option, sql })
+    hooks.emit('send', {data, method, option, sql})
     return data
   }
+
   /**克隆实例 */
   clone() {
     // @ts-ignore
@@ -499,10 +490,11 @@ export class Flq {
     db.pool = this.pool
     return db
   }
+
   /**设置表格 */
   from(...option: FromOption[]) {
     const db = this.clone()
-    const { option: sp } = db
+    const {option: sp} = db
     const sql = option.map((e) => methods.from.call(db, e)).join(', ')
     if (sp.from) {
       sp.from += ', ' + sql
@@ -511,10 +503,11 @@ export class Flq {
     }
     return db
   }
+
   /**设置字段 */
   field(...option: FieldOption[]) {
     const db = this.clone()
-    const { option: sp } = db
+    const {option: sp} = db
     const sql = option.map((e) => methods.field.call(db, e)).join(', ')
     if (sp.field) {
       sp.field += ', ' + sql
@@ -523,10 +516,11 @@ export class Flq {
     }
     return db
   }
+
   /**设置条件 */
   where(...option: WhereOption[]) {
     const db = this.clone()
-    const { option: sp } = db
+    const {option: sp} = db
     const sql = option.map((e) => methods.where(e)).join(' AND ')
     if (sp.where) {
       sp.where += ' AND ' + sql
@@ -535,10 +529,11 @@ export class Flq {
     }
     return db
   }
+
   /**设置值 */
   set(option: SetOption) {
     const db = this.clone()
-    const { option: sp } = db
+    const {option: sp} = db
     const sql = methods.set(option)
     if (sp.set) {
       sp.set += ', ' + sql
@@ -547,10 +542,11 @@ export class Flq {
     }
     return db
   }
+
   /**排序 */
   order(option: OrderOption, defOp?: OrderOption.Op) {
     const db = this.clone()
-    const { option: sp } = db
+    const {option: sp} = db
     const sql = methods.order(option, defOp)
     if (sp.order) {
       sp.order += ', ' + sql
@@ -559,17 +555,19 @@ export class Flq {
     }
     return db
   }
+
   /**分组 */
   group(option: GroupOption) {
     const db = this.clone()
-    const { option: sp } = db
+    const {option: sp} = db
     sp.group = methods.group(option)
     return db
   }
+
   /**插入数据 */
   value(option: ValueOption) {
     const db = this.clone()
-    const { option: sp } = db
+    const {option: sp} = db
     if (sp.value) {
       Object.assign(sp.value, methods.value(option))
     } else {
@@ -577,29 +575,32 @@ export class Flq {
     }
     return db
   }
+
   /**分页 */
   limit(...option: LimitOption) {
     const db = this.clone()
-    const { option: sp } = db
+    const {option: sp} = db
     sp.limit = methods.limit(option)
     return db
   }
+
   /**每页条数 */
   size(size: number) {
     const db = this.clone()
-    const { option: sp } = db
+    const {option: sp} = db
     if (size > 0) {
-      sp.limit = [, size]
+      sp.limit = [0, size]
       return db
     }
     throw new FlqError('Flq.page: 必须传入大于0的整数')
   }
+
   /**页码 */
   page(page: number) {
     const db = this.clone()
-    const { option: sp } = db
+    const {option: sp} = db
     if (page > 0) {
-      const { limit } = sp
+      const {limit} = sp
       if (!limit || !limit[1])
         throw new FlqError('Flq.page: 必须先设置每页条数')
       limit[0] = (page - 1) * limit[1]
@@ -607,18 +608,20 @@ export class Flq {
     }
     throw new FlqError('Flq.page: 必须传入大于0的整数')
   }
+
   /**虚拟获取 */
   virtualGet(...option: string[]) {
     const db = this.clone()
-    const { option: sp } = db
+    const {option: sp} = db
     if (sp.virtualGet) sp.virtualGet.push(...option)
     else sp.virtualGet = [...option]
     return db
   }
+
   /**虚拟插入 */
   virtualSet(...option: FlqOption['virtualSet'][]) {
     const db = this.clone()
-    const { option: sp } = db
+    const {option: sp} = db
     if (sp.virtualSet) {
       Object.assign(sp.virtualSet, ...option)
       db.option.traversal = true
@@ -627,42 +630,48 @@ export class Flq {
     }
     return db
   }
+
   /**子字段 */
   subField(...option: SubFieldOption[]) {
     const db = this.clone()
-    const { option: sp } = db
-    if (sp.subField) Object.assign(sp.subField, methods.subField(option, db))
-    else sp.subField = Object.assign({}, methods.subField(option, db))
+    const {option: sp} = db
+    if (sp.subField) Object.assign(sp.subField, methods.subField(option))
+    else sp.subField = Object.assign({}, methods.subField(option))
     return db
   }
+
   /**获取上一次查询的总列数 */
   foundRows() {
     const db = this.clone()
-    const { option: sp } = db
+    const {option: sp} = db
     sp.foundRows = 'SQL_CALC_FOUND_ROWS'
     return db
   }
+
   /**获取最后一个插入的id */
   insertId() {
     const db = this.clone()
-    const { option: sp } = db
+    const {option: sp} = db
     sp.insertId = true
     return db
   }
+
   /**查询 */
   async find() {
     return await this.send('select')
   }
+
   /**查询第一个 */
   async first() {
     const data = await this.send('select')
     return data[0]
   }
+
   /**插入 */
   async insert() {
-    const data = await this.send('insert')
-    return data
+    return await this.send('insert')
   }
+
   /**计数 */
   async count() {
     const data = await this.send('count')
@@ -678,16 +687,17 @@ export function pretreat(option: {
   value: any
 }) {
   hooks.emit('pretreat', option)
-  const { flq, from, field, value } = option
-  const { model, fieldMap } = flq
+  const {flq, from, field, value} = option
+  const {model, fieldMap} = flq
 }
+
 /**后处理 */
 export async function postreat(option: EventParam.PostreatEvent) {
   await hooks.emit('postreat', option)
-  const { flq, data } = option
-  const { traversal } = flq.option
+  const {flq, data} = option
+  const {traversal} = flq.option
   if (!Array.isArray(data)) return
-  const { model: mod, fieldMap } = flq
+  const {model: mod, fieldMap} = flq
   if (!mod) return
   // 模型映射关系
   const modMap: Map<string, string> = new Map()
@@ -709,19 +719,16 @@ export async function postreat(option: EventParam.PostreatEvent) {
   if (!modMap.size && !traversal) return
   const ps: PromiseSet = new Set()
   // 遍历数据
-  data.forEach((row: any, index: number) => {
-    ps.add(hooks.emit('rowPostreat', { flq, row }))
+  data.forEach((row: any) => {
+    ps.add(hooks.emit('rowPostreat', {flq, row}))
     // 遍历字段映射表
     modMap.forEach((model, key) => {
       const value = row[key]
-      ps.add(hooks.emit('fieldPostreat', { flq, model, key, value, row }))
+      ps.add(hooks.emit('fieldPostreat', {flq, model, key, value, row}))
     })
   })
   await Promise.all(ps)
 }
-
-// 绑定内置事件侦听器
-import * as listeners from './listeners'
 
 for (const key in listeners) {
   //@ts-ignore
