@@ -8,13 +8,10 @@ const flq = new Flq({
 })
 
 flq.test(async () => {
-  const db = flq
-    .from('student')
-    .field('name', 'age', 'chinese', 'math', 'english')
-    .limit({ page: 1, size: 3 })
-    .foundRows()
+  const db = flq.from('student').field({
+    AVG: { chinese: '语文', math: '数学', english: '英语' },
+  })
   const result = await db.find()
   console.log(db.sql)
   console.log(result)
-  console.log('总列数:', db.total);
 })

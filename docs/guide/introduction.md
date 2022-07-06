@@ -5,7 +5,7 @@
 使用`yarn`或者`npm`安装`FLQ`
 
 ::: tip
-FLQ只有一个依赖项：`mysql`
+FLQ只有一个依赖项：`mysql2`
 :::
 
 ```sh

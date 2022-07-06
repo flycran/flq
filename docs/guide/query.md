@@ -4,7 +4,7 @@
 
 为了方便演示后续的操作，我们先准备一个用于测试的表格
 
-现在它看起来应该像这样：
+它看起来应该像这样：
 
 | id   | name | gender | chinese | math | english | class | age  | association |
 | ---- | ---- | ------ | ------- | ---- | ------- | ----- | ---- | ----------- |
@@ -17,14 +17,16 @@
 | 7    | 周九 | 女     | 65      | 57   | 36      | 1     | 12   | 3,5         |
 | 8    | 孙十 | 男     | 58      | 63   | 75      | 4     | 13   | 1,2         |
 
-你可用在[演示表格](/table/student.html)处找到此表的sql语句。
+你可以在[演示表格](/table/student.html)处找到此表的sql语句。
 
 ## 基础查询
 
 #### 演示
 
 ```js
+// from 要查询的表格
 const db = flq.from('student')
+// find 执行查询
 const result = await db.find()
 console.log(result)
 ```
@@ -65,6 +67,7 @@ console.log(result)
 
 ```js
 flq.test(async () => {
+  // where 查询条件
   const db = flq.from('student').where({ gender: '女' })
   const result = await db.find()
   console.log(db.sql)
@@ -118,6 +121,7 @@ flq.test(async () => {
   const db = flq
     .from('student')
     .where({ gender: '女' })
+    // field 查询的字段
     .field('name', { gender: 'sex' })
   const result = await db.find()
   console.log(db.sql)
@@ -149,6 +153,7 @@ SELECT `name`, `gender` as 'sex' FROM `student` WHERE `gender` = '女'
 
 ```js 
 flq.test(async () => {
+  // 在field中使用AVG聚合方法
   const db = flq.from('student').field({
     AVG: ['chinese', 'math', 'english']
   })
@@ -185,6 +190,7 @@ flq.test(async () => {
       },
       'gender'
     )
+    // group 分组
     .group('gender')
   const result = await db.find()
   console.log(db.sql)
@@ -227,6 +233,7 @@ flq.test(async () => {
   const db = flq
     .from('student')
     .field('name', 'age', 'chinese', 'math', 'english')
+    // order 排序
     .order({
       age: 1,
       '-1': ['chinese', 'math', 'english'],
@@ -254,6 +261,7 @@ SELECT `name`, `age`, `chinese`, `math`, `english` FROM `student` ORDER BY `age`
 ```
 
 :::tip
+`order` 中的字段顺序将决定排序的优先级
 
 前往[API文档](/api/flq.html#order)查看`order`的详细用法
 
@@ -324,9 +332,8 @@ SELECT SQL_CALC_FOUND_ROWS `name`, `age`, `chinese`, `math`, `english` FROM `stu
 
 :::tip
 
-Flq内部使用`SQL_CALC_FOUND_ROWS`来返回总列数，将结果保存在`Flq`实例下，因此务必在调用`find`前保存`Flq`实例
-
-。若该实例可能被多次`find`，应调用`clone`方法克隆一个独立的`Flq`实例
+Flq内部使用`SQL_CALC_FOUND_ROWS`来返回总列数，将结果保存在`Flq`实例下，因此务必在调用`find`前保存`Flq`实例。
+若该实例可能被多次`find`，应调用`clone`方法克隆一个独立的`Flq`实例
 
 :::
 
