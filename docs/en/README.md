@@ -20,4 +20,4 @@ footer: 湘ICP备2022005467号
 
 ### English documents will not be provided temporarily
 
-> You can participate in the translation of this document or go to check it[Chinese documents](/)
+> You can participate in the translation of this document or go to check it [Chinese documents](/)

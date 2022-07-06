@@ -1,4 +1,4 @@
-# flq
+# FLQ
 
 - Node 与数据库交互的应用层解决方案
 
@@ -6,7 +6,7 @@
 
 - 前往[FLQ 中文文档](https://flq.flycran.xyz)查看完整文档
 
-- 前往[FLQ English documents](https://flq.flycran.xyz/en/)View full documentation
+- go to [FLQ English documents](https://flq.flycran.xyz/en/) View full documentation
 
 ## 基本查询
 
