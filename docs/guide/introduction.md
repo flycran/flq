@@ -8,7 +8,7 @@
 FLQ只有一个依赖项：`mysql`
 :::
 
-```bash
+```sh
 yarn add flq #npm i flq
 ```
 
@@ -41,27 +41,30 @@ db.find().then((e) => console.log(e))
 
 ## 测试模式
 
-使用测试模式可用更好的测试FLQ，只需在`hooks`中绑定一个特殊的事件`test`
+使用测试模式可用更好的测试FLQ
 
 ::: tip
-`test`事件侦听器将异步执行，并且在侦听器执行完成后立即关闭mysql连接
+`test`方法将异步执行，并且在回调完成后立即关闭`mysql`连接
 :::
 
 ```js
-const { Flq, hooks } = require('flq')
+const { Flq } = require('flq')
 
-new Flq({
+const flq = new Flq({
   pool: true, // 使用连接池 !推荐使用
   user: 'root', // 登陆用户
   password: process.env.SQLPASSWORD, // 登陆密码
   database: 'test', // 数据库名
 })
 // 使用测试模式
-hooks.on('test', async () => {
+flq.test(async () => {
   const db = flq.from('student')
   const result = await db.find()
+  // 打印sql语句
+  console.log(db.sql)
+  // 打印查询结果
   console.log(result)
 })
 ```
 
-为了方便演示，后续教程将始终以测试模式运行
+为了方便演示，后续教程将始终以测试模式运行，并省略不必要的演示。

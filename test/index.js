@@ -7,21 +7,14 @@ const flq = new Flq({
   database: 'test', // 数据库名
 })
 
-hooks.on('test', async () => {
-  const db = flq.from('student').field({
-    chinese: {
-      met: 'avg',
-      as: 'chinese',
-    },
-    math: {
-      met: 'avg',
-      as: 'math',
-    },
-    english: {
-      met: 'avg',
-      as: 'english',
-    },
-  })
+flq.test(async () => {
+  const db = flq
+    .from('student')
+    .field('name', 'age', 'chinese', 'math', 'english')
+    .limit({ page: 1, size: 3 })
+    .foundRows()
   const result = await db.find()
+  console.log(db.sql)
   console.log(result)
+  console.log('总列数:', db.total);
 })
