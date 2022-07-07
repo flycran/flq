@@ -1,15 +1,26 @@
 {
   "compilerOptions": {
-    "suppressImplicitAnyIndexErrors": false, /* 屏蔽索引报错 */
-    "target": "ES2020", /* 为发出的JavaScript设置JavaScript语言版本，并包括兼容的库声明 */
-    "module": "CommonJS", /* 指定生成的模块代码 */
-    "rootDir": "./src", /* Specify the root folder within your source files. */
-    "declaration": true, /* Generate .d.ts files from TypeScript and JavaScript files in your project. */
-    "sourceMap": true, /* Create source map files for emitted JavaScript files. */
-    "outDir": "./lib", /* Specify an output folder for all emitted files. */
-    "declarationDir": "./lib", /* Specify the output directory for generated declaration files. */
-    "forceConsistentCasingInFileNames": true, /* Ensure that casing is correct in imports. */
+    "suppressImplicitAnyIndexErrors": false,
+    /* 屏蔽索引报错 */
+    "target": "ES2020",
+    /* 为发出的JavaScript设置JavaScript语言版本，并包括兼容的库声明 */
+    "module": "CommonJS",
+    /* Specify the root folder within your source files. */
+    "declaration": true,
+    /* Generate .d.ts files from TypeScript and JavaScript files in your project. */
+    "sourceMap": true,
+    /* Create source map files for emitted JavaScript files. */
+    "outDir": "./lib",
+    /* Specify an output folder for all emitted files. */
+    "declarationDir": "./lib",
+    /* Specify the output directory for generated declaration files. */
+    "forceConsistentCasingInFileNames": true,
+    /* Ensure that casing is correct in imports. */
     /* Type Checking */
-    "strict": true, /* Enable all strict type-checking options. */
-  }
+    "strict": true
+    /* Enable all strict type-checking options. */
+  },
+  "include": [
+    "src/*",
+  ]
 }

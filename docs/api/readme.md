@@ -4,8 +4,9 @@
 
 `test(callBack: (this: Flq) => Promise<any>): void`
 
-> 用于测试连接。
-> 在`callBack`执行完后自动调用`flq.end()`方法结束连接。
+用于测试连接。
+
+在`callBack`执行完后自动调用`flq.end()`方法结束连接。
 
 - **callBack**
 
@@ -23,19 +24,19 @@ flq.test(async () => {
 
 `getConnect(): Promise<Connection>`
 
-> 返回一个数据库连接
+返回一个数据库连接
 
 ## end
 
 `end(): Promise<void>`
 
-> 用于结束数据库连接
+用于结束数据库连接
 
 ## query
 
 `query(sql: string, connection?: Connection | Pool): Promise<any>`
 
-> 传入一个sql语句发起查询，可自定义执行查询的连接
+传入一个sql语句发起查询，可自定义执行查询的连接
 
 - **sql**
 
@@ -48,7 +49,7 @@ flq.test(async () => {
 
 `format(template: string): string`
 
-> 格式化sql语句
+格式化sql语句
 
 - **template**
 
@@ -59,7 +60,7 @@ flq.test(async () => {
 
 `send(template: string): Promise<any>`
 
-> 发送sql语句。与`query`不同，`send`将自动调用`format`生成sql语句，并调用模型处理。
+发送sql语句。与`query`不同，`send`将自动调用`format`生成sql语句，并调用模型处理。
 
 - **template**
 
@@ -70,13 +71,13 @@ flq.test(async () => {
 
 `clone(): Flq`
 
-> 克隆`flq`实例，将继承mysql连接和FLQ模型，拷贝sql配置和字段映射。
+克隆`flq`实例，将继承mysql连接和FLQ模型，拷贝sql配置和字段映射。
 
 ## from
 
 `from(...option: string[])`
 
-> 配置操作的表格，尽量优先配置该选项，否则模型处理将不会工作
+配置操作的表格，尽量优先配置该选项，否则模型处理将不会工作
 
 - **option**
   直接填表名即可，可以传多个表名，若传递多个表名，在引用字段时则需要显式指定表名。例如:`'student.name'`，否则将影响[字段映射](/)
@@ -85,7 +86,7 @@ flq.test(async () => {
 
 `field(...option: FieldOption[]): Flq`
 
-> 配置查询的字段，该配置会影响[字段映射](/)
+配置查询的字段，该配置会影响[字段映射](/)
 
 - **option**
   字段配置，可选字符串、字符串数组或者对象
@@ -168,7 +169,7 @@ group('gender')
 
 `limit(...option: LimitOption): Flq`
 
-> 配置分页
+配置分页
 
 - **...option**
 
@@ -212,7 +213,7 @@ group('gender')
 
 `size(size: number): Flq`
 
-> 单独设置每页条数
+单独设置每页条数
 
 - **size**
 
@@ -222,7 +223,7 @@ group('gender')
 
 `page(page: number): Flq`
 
-> 单独设置每页条数
+单独设置每页条数
 
 - **page**
 
@@ -238,8 +239,42 @@ group('gender')
 
 `foundRows(): Flq`
 
-> 在分页查询时，自动返回查询的总条数。总条数将保存在调用`flq.find()`的实例下。
+在分页查询时，自动返回查询的总条数。总条数将保存在调用`flq.find()`的实例下。
 
 ```js
-
+const db = flq
+  .from('student')
+  .field('name', 'age', 'chinese', 'math', 'english')
+  .limit({page: 1, size: 3})
+  .foundRows()
+const result = await db.find()
+console.log(db.sql)
+console.log(result)
+console.log('总列数:', db.total);
 ```
+
+## find
+
+`find(): Promise<Record<string, any>[]>`
+
+执行查询语句[（template: select）](https://gitee.com/flycran/flq/blob/master/src/templates.ts)
+
+## first
+
+`first(): Promise<Record<string, any>>`
+
+查询匹配的第一条数据[（template: first）](https://gitee.com/flycran/flq/blob/master/src/templates.ts)
+
+该方法会忽略分页、分组、排序等无意义的配置项。
+
+## insert
+
+`insert(): Promise<Record<string, any>>`
+
+执行插入语句[（template: insert）](https://gitee.com/flycran/flq/blob/master/src/templates.ts)
+
+## count
+
+`count(): Promise<number>`
+
+查询复合条件的数据条数[（template: count）](https://gitee.com/flycran/flq/blob/master/src/templates.ts)

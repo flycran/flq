@@ -1,4 +1,4 @@
-import {Connection, createConnection, createPool, escape as $escape, Pool,} from 'mysql2'
+import {Connection, createConnection, createPool, escape as $escape, Pool} from 'mysql2'
 import {AsyncEvent} from './event'
 
 import {
@@ -658,12 +658,12 @@ export class Flq {
   }
 
   /**查询 */
-  async find() {
+  async find(): Promise<Record<string, any>[]> {
     return await this.send('select')
   }
 
   /**查询第一个 */
-  async first() {
+  async first(): Promise<Record<string, any>> {
     const data = await this.send('select')
     return data[0]
   }
@@ -677,6 +677,11 @@ export class Flq {
   async count() {
     const data = await this.send('count')
     return Object.values(data[0])[0]
+  }
+
+  /**移除 */
+  async remove() {
+    return await this.send('delete')
   }
 }
 

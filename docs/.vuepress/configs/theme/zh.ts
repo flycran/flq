@@ -16,6 +16,7 @@ export const zh: DefaultThemeOptions = {
     {text: '指南', link: '/guide/'},
     {text: 'API', link: '/api/'},
     {text: '演示表格', children: ['/table/student.md']},
+    {text: '更新日志', link: '/update'},
     {text: '支持', link: '/support'},
   ],
   sidebar: {

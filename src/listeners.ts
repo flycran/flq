@@ -13,7 +13,7 @@ export const postreat = {
     if (!flq.option.foundRows) return
     if (!Array.isArray(data)) return
     const d = await flq.query(foundRows, connect)
-    flq.total = Object.values(d[0])[0]
+    flq.total = Object.values(d[0])[0] as number
   },
 }
 

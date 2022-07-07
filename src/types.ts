@@ -1,6 +1,6 @@
 // 公共类型声明
-import { Flq } from './index'
-import { Connection } from 'mysql2'
+import {Flq} from './index'
+import {Connection} from 'mysql2'
 
 /**连接配置 */
 export interface ConnectOption {
@@ -72,6 +72,7 @@ export interface FlqOption {
   field?: string
   /**条件 */
   where?: string
+  // ！改为对象形式
   /**设置 */
   set?: string
   /**插入 */
@@ -95,6 +96,7 @@ export interface FlqOption {
   /**强制遍历响应数据 */
   traversal?: boolean
 }
+
 /**基本索引对象 */
 export type Data = Record<string, any>
 /**表名 */
@@ -152,16 +154,18 @@ export type ValueOption = Record<string, any>
 export type LimitOption =
   | [number, number]
   | [
-      {
-        /**页码(从1开始) */
-        page: number
-        /**每页条数 */
-        size: number
-      }
-    ]
+  {
+    /**页码(从1开始) */
+    page: number
+    /**每页条数 */
+    size: number
+  }
+]
 /**子字段选项 */
 export namespace SubFieldOption {
-  interface Op {}
+  interface Op {
+  }
+
   export type Obj = Record<string, string | Op>
   export type Option = Obj | string
 }
@@ -172,30 +176,32 @@ export namespace ModelOption {
     field: string
     rename: string
   }
-  type SubJoin = Record<string, string | SubOption>
+
+  type Sub = Record<string, string | SubOption>
 
   export interface Ops {
     /**类型 */
     type: string
     /**默认值 */
-    default: ((this: Flq, value: any, data: Data) => any) | any
+    default: ((this: Flq, value: Record<string, any>) => Promise<any>) | any
     /**更新值 */
-    update: ((this: Flq, value: any, data: Data) => any) | any
+    update: ((this: Flq, value: Record<string, any>) => Promise<any>) | any
     /**虚拟字段获取 */
-    get: (this: Flq, row: Data) => any | Promise<any>
+    get: (this: Flq, row: Data) => Promise<any>
     /**虚拟字段设置 */
-    set: (this: Flq, value: any, row: Data) => void | Promise<void>
+    set: (this: Flq, value: any, row: Data) => Promise<void>
     /**预处理 */
-    pretreat: (this: Flq, value: any, data: Data) => any | Promise<any>
+    pretreat: (this: Flq, value: any, data: Data) => Promise<any>
     /**后处理 */
-    postreat: (this: Flq, value: any, data: Data) => any | Promise<any>
+    postreat: (this: Flq, value: any, data: Data) => Promise<any>
     /**重命名 */
     rename: string
     /**转数组 */
     toArray: boolean
     /**子表连接 */
-    subJoin: SubJoin
+    sub: Sub
   }
+
   export type Option = Record<string, Record<string, Partial<Ops>>>
 }
 export type ModelOption = ModelOption.Option
@@ -209,10 +215,12 @@ export namespace EventParam {
     method: string
     connect: Connection
   }
+
   export interface RowPostreatEvent {
     flq: Flq
     row: Record<string, any>
   }
+
   export interface ModelPostreatEvent {
     flq: Flq
     fields: string[]
