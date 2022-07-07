@@ -14,12 +14,15 @@ export const en: DefaultThemeOptions = {
   navbar: [
     { text: 'guide', link: '/en/guide/' },
     { text: 'API', link: '/en/api/' },
-    { text: 'Presentation form', link: '/en/table/' },
+    { text: 'Presentation form', children: ['/table/student.md'] },
     { text: 'support', link: '/en/support' },
   ],
   sidebar: {
     '/guide/': ['readme.md', 'introduction.md', 'query.md'],
     '/api/': ['readme.md', 'model.md'],
-    '/table/': ['readme.md'],
+    '/table/': [{
+      text: '演示表格',
+      children: ['student.md']
+    }],
   },
 }

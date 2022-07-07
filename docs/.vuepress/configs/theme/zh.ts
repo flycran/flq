@@ -1,4 +1,5 @@
-import { DefaultThemeOptions } from '@vuepress/theme-default'
+import {DefaultThemeOptions} from '@vuepress/theme-default'
+
 export const zh: DefaultThemeOptions = {
   repoLabel: '查看源码',
   editLinkText: '帮助我们改善此页面！',
@@ -12,14 +13,17 @@ export const zh: DefaultThemeOptions = {
   notFound: ['此页面被外星人抓走了'],
   backToHome: '返回首页',
   navbar: [
-    { text: '指南', link: '/guide/' },
-    { text: 'API', link: '/api/' },
-    { text: '演示表格', link: '/table/' },
-    { text: '支持', link: '/support' },
+    {text: '指南', link: '/guide/'},
+    {text: 'API', link: '/api/'},
+    {text: '演示表格', children: ['/table/student.md']},
+    {text: '支持', link: '/support'},
   ],
   sidebar: {
     '/guide/': ['readme.md', 'introduction.md', 'query.md'],
     '/api/': ['readme.md', 'model.md'],
-    '/table/': ['readme.md'],
+    '/table/': [{
+      text: '演示表格',
+      children: ['student.md']
+    }],
   },
 }

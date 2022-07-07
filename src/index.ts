@@ -393,24 +393,24 @@ export class Flq {
   total?: number
 
   /**测试 */
-  async test(callBack: (flq: Flq) => Promise<any>) {
-    await callBack(this)
+  async test(callBack: (this: Flq) => Promise<any>) {
+    await callBack.call(this)
     await this.end()
   }
 
   /**获取连接 */
   getConnect(): Connection | Promise<Connection> {
     const {pool} = this
-    if (pool) {
-      return new Promise((e, r) => {
+    return new Promise((e, r) => {
+      if (pool) {
         pool.getConnection((err, ctn) => {
           if (err) return r(err)
           e(ctn)
         })
-      })
-    }
-    //@ts-ignore
-    return this.connection
+      } else if (this.connection) {
+        e(this.connection)
+      }
+    })
   }
 
   /**结束连接 */
@@ -428,7 +428,7 @@ export class Flq {
   query(
     sql: string,
     connection?: Connection | Pool
-  ): Promise<Record<string, any>[]> {
+  ): Promise<any> {
     return new Promise(async (e, r) => {
       if (!connection) connection = await this.getConnect()
       connection.query(sql, (err, data) => {
@@ -441,12 +441,12 @@ export class Flq {
 
   /**
    * 格式化为sql语句
-   * @param method 格式方法
+   * @param template 格式方法
    * @returns sql语句
    */
-  format(method: string): string {
+  format(template: string): string {
     //@ts-ignore
-    let rsql = templates[method]
+    let rsql = templates[template]
     const sql = rsql.replace(FORMATREG, (a: string, e: string) => {
       //@ts-ignore
       const v = this.option[e]
@@ -461,27 +461,27 @@ export class Flq {
 
   /**
    * 发送sql语句, 并根据模型处理数据
-   * @param method 格式方法
+   * @param template 格式方法
    * @returns 数据
    */
-  async send(method: string) {
+  async send(template: string): Promise<any> {
     const {option} = this
     //@ts-ignore
     const ctn: Connection = await this.getConnect()
-    const sql = this.format(method)
+    const sql = this.format(template)
     const data: any = await this.query(sql, ctn)
-    await postreat({flq: this, data, method, connect: ctn})
+    await postreat({flq: this, data, method: template, connect: ctn})
     // 释放连接
     if (this.pool) {
       //@ts-ignore
       ctn.release()
     }
-    hooks.emit('send', {data, method, option, sql})
+    hooks.emit('send', {data, method: template, option, sql})
     return data
   }
 
   /**克隆实例 */
-  clone() {
+  clone(): Flq {
     // @ts-ignore
     const db = new Flq()
     db.option = deepClone(this.option)

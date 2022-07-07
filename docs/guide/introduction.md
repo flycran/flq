@@ -8,9 +8,23 @@
 FLQ只有一个依赖项：`mysql2`
 :::
 
-```sh
-yarn add flq #npm i flq
+<CodeGroup>
+  <CodeGroupItem title="YARN">
+
+```sh:no-line-numbers
+yarn add flq
 ```
+
+  </CodeGroupItem>
+
+  <CodeGroupItem title="NPM" active>
+
+```sh:no-line-numbers
+npm i flq
+```
+
+  </CodeGroupItem>
+</CodeGroup>
 
 ## 连接数据库
 
@@ -68,3 +82,9 @@ flq.test(async () => {
 ```
 
 为了方便演示，后续教程将始终以测试模式运行，并省略不必要的演示。
+
+## 在线运行
+
+你可以在线运行`FLQ`，使用`flq.format(template: string)`方法可以直接生成sql语句而不需要连接数据库。方便在线运行演示。
+
+> 前往 [RunKit](https://runkit.com/flycran/flq-query) 在线运行 [![](https://img.shields.io/badge/Flq-RunKit%20-%23F55FA6)](https://runkit.com/flycran/flq-query)

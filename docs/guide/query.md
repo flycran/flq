@@ -6,16 +6,16 @@
 
 它看起来应该像这样：
 
-| id   | name | gender | chinese | math | english | class | age  | association |
-| ---- | ---- | ------ | ------- | ---- | ------- | ----- | ---- | ----------- |
-| 1    | 张三 | 男     | 86      | 78   | 65      | 2     | 11   | 1,5,6       |
-| 2    | 李四 | 女     | 56      | 56   | 23      | 1     | 12   | 2,4         |
-| 3    | 王五 | 女     | 89      | 41   | 91      | 2     | 10   | 3,6         |
-| 4    | 赵六 | 男     | 86      | 97   | 78      | 3     | 11   |             |
-| 5    | 钱七 | 男     | 91      | 100  | 86      | 4     | 11   | 2,3,4       |
-| 6    | 郑八 | 女     | 86      | 63   | 75      | 3     | 13   | 1,3,5,6     |
-| 7    | 周九 | 女     | 65      | 57   | 36      | 1     | 12   | 3,5         |
-| 8    | 孙十 | 男     | 58      | 63   | 75      | 4     | 13   | 1,2         |
+| id  | name | gender | chinese | math | english | class | age | association |
+|-----|------|--------|---------|------|---------|-------|-----|-------------|
+| 1   | 张三   | 男      | 86      | 78   | 65      | 2     | 11  | 1,5,6       |
+| 2   | 李四   | 女      | 56      | 56   | 23      | 1     | 12  | 2,4         |
+| 3   | 王五   | 女      | 89      | 41   | 91      | 2     | 10  | 3,6         |
+| 4   | 赵六   | 男      | 86      | 97   | 78      | 3     | 11  |             |
+| 5   | 钱七   | 男      | 91      | 100  | 86      | 4     | 11  | 2,3,4       |
+| 6   | 郑八   | 女      | 86      | 63   | 75      | 3     | 13  | 1,3,5,6     |
+| 7   | 周九   | 女      | 65      | 57   | 36      | 1     | 12  | 3,5         |
+| 8   | 孙十   | 男      | 58      | 63   | 75      | 4     | 13  | 1,2         |
 
 你可以在[演示表格](/table/student.html)处找到此表的sql语句。
 
@@ -68,7 +68,7 @@ console.log(result)
 ```js
 flq.test(async () => {
   // where 查询条件
-  const db = flq.from('student').where({ gender: '女' })
+  const db = flq.from('student').where({gender: '女'})
   const result = await db.find()
   console.log(db.sql)
   console.log(result)
@@ -110,7 +110,7 @@ SELECT * FROM `student` WHERE `gender` = '女'
 
 前往[API文档](/api/flq.html#where)查看`where`的详细用法
 
-::: 
+:::
 
 ## 查询部分字段
 
@@ -120,9 +120,9 @@ SELECT * FROM `student` WHERE `gender` = '女'
 flq.test(async () => {
   const db = flq
     .from('student')
-    .where({ gender: '女' })
+    .where({gender: '女'})
     // field 查询的字段
-    .field('name', { gender: 'sex' })
+    .field('name', {gender: 'sex'})
   const result = await db.find()
   console.log(db.sql)
   console.log(result)
@@ -145,7 +145,7 @@ SELECT `name`, `gender` as 'sex' FROM `student` WHERE `gender` = '女'
 
 前往[API文档](/api/flq.html#field)查看`field`的详细用法
 
-::: 
+:::
 
 ## 聚合
 
@@ -181,21 +181,19 @@ SELECT AVG(`chinese`) as 'chinese', AVG(`math`) as 'math', AVG(`english`) as 'en
 #### 演示
 
 ```js
-flq.test(async () => {
-  const db = flq
-    .from('student')
-    .field(
-      {
-        AVG: ['chinese', 'math', 'english'],
-      },
-      'gender'
-    )
-    // group 分组
-    .group('gender')
-  const result = await db.find()
-  console.log(db.sql)
-  console.log(result)
-})
+const db = flq
+  .from('student')
+  .field(
+    {
+      AVG: ['chinese', 'math', 'english'],
+    },
+    'gender'
+  )
+  // group 分组
+  .group('gender')
+const result = await db.find()
+console.log(db.sql)
+console.log(result)
 ```
 
 #### 结果
@@ -229,19 +227,17 @@ SELECT AVG(`chinese`) as 'chinese', AVG(`math`) as 'math', AVG(`english`) as 'en
 #### 演示
 
 ```js
-flq.test(async () => {
-  const db = flq
-    .from('student')
-    .field('name', 'age', 'chinese', 'math', 'english')
-    // order 排序
-    .order({
-      age: 1,
-      '-1': ['chinese', 'math', 'english'],
-    })
-  const result = await db.find()
-  console.log(db.sql)
-  console.log(result)
-})
+const db = flq
+  .from('student')
+  .field('name', 'age', 'chinese', 'math', 'english')
+  // order 排序
+  .order({
+    age: 1,
+    '-1': ['chinese', 'math', 'english'],
+  })
+const result = await db.find()
+console.log(db.sql)
+console.log(result)
 ```
 
 #### 结果
@@ -261,7 +257,6 @@ SELECT `name`, `age`, `chinese`, `math`, `english` FROM `student` ORDER BY `age`
 ```
 
 :::tip
-`order` 中的字段顺序将决定排序的优先级
 
 前往[API文档](/api/flq.html#order)查看`order`的详细用法
 
@@ -272,15 +267,13 @@ SELECT `name`, `age`, `chinese`, `math`, `english` FROM `student` ORDER BY `age`
 #### 演示
 
 ```js
-flq.test(async () => {
-  const db = flq
-    .from('student')
-    .field('name', 'age', 'chinese', 'math', 'english')
-    .limit({ page: 1, size: 3 })
-  const result = await db.find()
-  console.log(db.sql)
-  console.log(result)
-})
+const db = flq
+  .from('student')
+  .field('name', 'age', 'chinese', 'math', 'english')
+  .limit({page: 1, size: 3})
+const result = await db.find()
+console.log(db.sql)
+console.log(result)
 ```
 
 #### 结果
@@ -305,17 +298,15 @@ SELECT `name`, `age`, `chinese`, `math`, `english` FROM `student` LIMIT 0, 3
 #### 演示
 
 ```js
-flq.test(async () => {
-  const db = flq
-    .from('student')
-    .field('name', 'age', 'chinese', 'math', 'english')
-    .limit({ page: 1, size: 3 })
-    .foundRows()
-  const result = await db.find()
-  console.log(db.sql)
-  console.log(result)
-  console.log('总列数:', db.total);
-})
+const db = flq
+  .from('student')
+  .field('name', 'age', 'chinese', 'math', 'english')
+  .limit({page: 1, size: 3})
+  .foundRows()
+const result = await db.find()
+console.log(db.sql)
+console.log(result)
+console.log('总列数:', db.total);
 ```
 
 #### 结果
