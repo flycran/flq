@@ -13,6 +13,7 @@ export class AsyncEvent {
     const { listener: ls } = this
     const l = ls.get(type)
     if (!l) return false
+    this.emit('removelistener', { type, listener })
     return l.delete(listener)
   }
   emit(type: string, ...events: any[]) {

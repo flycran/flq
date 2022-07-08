@@ -1,15 +1,66 @@
 import {EventParam, PromiseSet} from './types'
-import {Flq} from './index'
+import {Flq, hooks} from './index'
 import {foundRows, insertId} from './templates'
+import exp = require("constants");
 
+/**预处理 */
+export const pretreat = {
+  async pretreat(option: { flq: Flq; row: Record<string, any> }) {
+    hooks.emit('pretreat', option)
+    const {flq, row} = option
+    for (const key in row) {
+      const mod = getModel(flq, key)
+      if(!mod) continue
+
+    }
+  }
+}
+
+/**后处理 */
 export const postreat = {
-  async insertId({ flq, data, connect }: EventParam.PostreatEvent) {
+  async postreat(option: EventParam.PostreatEvent) {
+    const {flq, data} = option
+    const {traversal} = flq.option
+    if (!Array.isArray(data)) return
+    const {model: mod, fieldMap} = flq
+    if (!mod) return
+    // 模型映射关系
+    const modMap: Map<string, string> = new Map()
+    /**获取样本数据 */
+    const ond = data[0]
+    if (ond) {
+      /**字段数组 */
+      const fields = Object.keys(ond)
+      fields.forEach((f) => {
+        const map = fieldMap.field[f]
+        if (!map) return
+        const m1: any = mod[map[0]]
+        if (!m1) return
+        const m2 = m1[map[1]]
+        if (m2) modMap.set(f, m2)
+      })
+    }
+    // 映射表为空且没有强制遍历
+    if (!modMap.size && !traversal) return
+    const ps: PromiseSet = new Set()
+    // 遍历数据
+    data.forEach((row: any) => {
+      ps.add(hooks.emit('rowPostreat', {flq, row}))
+      // 遍历字段映射表
+      modMap.forEach((model, key) => {
+        const value = row[key]
+        ps.add(hooks.emit('fieldPostreat', {flq, model, key, value, row}))
+      })
+    })
+    await Promise.all(ps)
+  },
+  async insertId({flq, data, connect}: EventParam.PostreatEvent) {
     if (!flq.option.insertId) return
     if (Array.isArray(data)) return
     const d = await flq.query(insertId, connect)
     data.insertId = Object.values(d[0])[0]
   },
-  async foundRows({ flq, data, connect }: EventParam.PostreatEvent) {
+  async foundRows({flq, data, connect}: EventParam.PostreatEvent) {
     if (!flq.option.foundRows) return
     if (!Array.isArray(data)) return
     const d = await flq.query(foundRows, connect)
@@ -18,10 +69,10 @@ export const postreat = {
 }
 
 export const rowPostreat = {
-  async virtualGet({ row, flq }: EventParam.RowPostreatEvent) {
+  async virtualGet({row, flq}: EventParam.RowPostreatEvent) {
     if (!flq.option.virtualGet) return
     const {
-      option: { virtualGet },
+      option: {virtualGet},
       model,
     } = flq
     const ps: PromiseSet = new Set()
@@ -41,22 +92,22 @@ export const rowPostreat = {
     }
     await Promise.all(ps)
   },
-  async subField({ row, flq }: EventParam.RowPostreatEvent) {
+  async subField({row, flq}: EventParam.RowPostreatEvent) {
     if (!flq.option.subField) return
     const {
-      option: { subField },
+      option: {subField},
       model,
     } = flq
   },
 }
 
 export const fieldPostreat = {
-  toArray({ model, key, value, row }: EventParam.ModelPostreatEvent) {
+  toArray({model, key, value, row}: EventParam.ModelPostreatEvent) {
     if (!model.toArray) return
     if (!value) return (row[key] = [])
     row[key] = value.split(',')
   },
-  async postreat({ flq, model, key, value, row }: EventParam.ModelPostreatEvent) {
+  async postreat({flq, model, key, value, row}: EventParam.ModelPostreatEvent) {
     if (!model.postreat) return
     row[key] = await model.postreat.call(flq, value, row)
   },
@@ -64,7 +115,7 @@ export const fieldPostreat = {
 
 function getModel(flq: Flq, vf: string) {
   const {
-    fieldMap: { table },
+    fieldMap: {table},
     model,
   } = flq
   const ont = table[0]
