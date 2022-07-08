@@ -74,7 +74,7 @@ export interface FlqOption {
   where?: string
   // ！改为对象形式
   /**设置 */
-  set?: string
+  set?: Record<string, any>
   /**插入 */
   value?: Record<string, any>
   /**排序 */
