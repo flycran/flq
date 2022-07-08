@@ -678,6 +678,11 @@ export class Flq {
   async insert() {
     return await this.send('insert')
   }
+  
+  /**插入 */
+  async update() {
+    return await this.send('update')
+  }
 
   /**计数 */
   async count() {

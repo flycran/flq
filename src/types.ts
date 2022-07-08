@@ -1,7 +1,7 @@
 // 公共类型声明
-import {Flq} from './index'
-import {Connection} from 'mysql2'
-import exp = require("constants");
+import { Flq } from './index'
+import { Connection } from 'mysql2'
+import exp = require('constants')
 
 /**连接配置 */
 export interface ConnectOption {
@@ -155,17 +155,16 @@ export type ValueOption = Record<string, any>
 export type LimitOption =
   | [number, number]
   | [
-  {
-    /**页码(从1开始) */
-    page: number
-    /**每页条数 */
-    size: number
-  }
-]
+      {
+        /**页码(从1开始) */
+        page: number
+        /**每页条数 */
+        size: number
+      }
+    ]
 /**子字段选项 */
 export namespace SubFieldOption {
-  interface Op {
-  }
+  interface Op {}
 
   export type Obj = Record<string, string | Op>
   export type Option = Obj | string
@@ -180,26 +179,21 @@ export namespace ModelOption {
 
   type Sub = Record<string, string | SubOption>
 
-  export interface Ops {
+  export interface Model {
     /**类型 */
     type: string
     /**默认值 */
     default: ((this: Flq, value: Record<string, any>) => Promise<any>) | any
     /**更新值 */
     update: ((this: Flq, value: Record<string, any>) => Promise<any>) | any
-
     /**虚拟字段获取 */
-    get(this: Flq, row: Data): Promise<any>
-
+    get: (this: Flq, row: Data) => Promise<any> | any
     /**虚拟字段设置 */
-    set(this: Flq, value: any, row: Data): Promise<void>
-
+    set: (this: Flq, value: any, row: Data) => Promise<void> | void
     /**预处理 */
-    pretreat(this: Flq, value: any, data: Data): Promise<any>
-
+    pretreat: (this: Flq, value: any, data: Data) => Promise<any> | any
     /**后处理 */
-    postreat(this: Flq, value: any, data: Data): Promise<any>
-
+    postreat: (this: Flq, value: any, data: Data) => Promise<any> | any
     /**重命名 */
     rename: string
     /**转数组 */
@@ -208,13 +202,13 @@ export namespace ModelOption {
     sub: Sub
   }
 
-  export type Option = Record<string, Record<string, Partial<Ops>>>
+  export type Option = Record<string, Record<string, Partial<Model>>>
 }
 export type ModelOption = ModelOption.Option
 
 export type PromiseSet<T = any> = Set<Promise<T>>
 
-export namespace HooksEventParam {
+export namespace HooksEvent {
   export interface Petreat {
     flq: Flq
     row: Record<string, any>
@@ -222,6 +216,7 @@ export namespace HooksEventParam {
 
   export interface FieldPetreat {
     flq: Flq
+    model: Partial<ModelOption.Model>
     key: string
     value: any
     row: Record<string, any>
@@ -241,7 +236,7 @@ export namespace HooksEventParam {
 
   export interface FieldPostreat {
     flq: Flq
-    model: Partial<ModelOption.Ops>
+    model: Partial<ModelOption.Model>
     key: string
     value: any
     row: Record<string, any>
