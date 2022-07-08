@@ -3,6 +3,7 @@
   "version": "0.0.9",
   "description": "",
   "main": "lib/index.js",
+  "types": "./lib/index.d.ts",
   "scripts": {
     "test": "node test",
     "dev": "vuepress dev docs",

@@ -1,9 +1,10 @@
 {
   "compilerOptions": {
-    "suppressImplicitAnyIndexErrors": false,
     /* 屏蔽索引报错 */
-    "target": "ES2020",
+    "suppressImplicitAnyIndexErrors": false,
     /* 为发出的JavaScript设置JavaScript语言版本，并包括兼容的库声明 */
+    "target": "ES2020",
+    /*  */
     "module": "CommonJS",
     /* Specify the root folder within your source files. */
     "declaration": true,
@@ -15,12 +16,13 @@
     "declarationDir": "./lib",
     /* Specify the output directory for generated declaration files. */
     "forceConsistentCasingInFileNames": true,
-    /* Ensure that casing is correct in imports. */
-    /* Type Checking */
+    /* 严格类型检查 */
     "strict": true
-    /* Enable all strict type-checking options. */
   },
   "include": [
-    "src/*",
+    "src/*"
+  ],
+  "exclude": [
+    "ndoe_modules"
   ]
 }

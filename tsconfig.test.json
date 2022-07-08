@@ -9,8 +9,14 @@
     //    "sourceMap": true,
     "outDir": "./test",
     //    "declarationDir": "./test",
+    "noImplicitAny": false,
     "forceConsistentCasingInFileNames": true,
     "strict": true
   },
-  "files": ["test/index.ts"],
+  "files": [
+    "test/index.ts"
+  ],
+  "exclude": [
+    "ndoe_modules"
+  ]
 }

@@ -1,6 +1,6 @@
-import { PromiseSet, EventParam } from './types'
-import { Flq } from './index'
-import { insertId, foundRows } from './templates'
+import {EventParam, PromiseSet} from './types'
+import {Flq} from './index'
+import {foundRows, insertId} from './templates'
 
 export const postreat = {
   async insertId({ flq, data, connect }: EventParam.PostreatEvent) {
@@ -15,28 +15,6 @@ export const postreat = {
     const d = await flq.query(foundRows, connect)
     flq.total = Object.values(d[0])[0] as number
   },
-}
-
-function getModel(flq: Flq, vf: string) {
-  const {
-    fieldMap: { table },
-    model,
-  } = flq
-  const ont = table[0]
-  if (ont) {
-    return model![ont][vf]
-  }
-  const fs = vf.split('.')
-  if (fs.length > 1) {
-    return model![fs[0]][fs[1]]
-  }
-  for (let ti = 0; ti < table.length; ti++) {
-    const t = table[ti]
-    const n = model![t]
-    if (!n) continue
-    const m = n[vf]
-    if (m) return m
-  }
 }
 
 export const rowPostreat = {
@@ -73,14 +51,35 @@ export const rowPostreat = {
 }
 
 export const fieldPostreat = {
-  toArray({ model, field, value, row }: EventParam.ModelPostreatEvent) {
+  toArray({ model, key, value, row }: EventParam.ModelPostreatEvent) {
     if (!model.toArray) return
-    if (!value) return (row[field] = [])
-    row[field] = value.split(',')
+    if (!value) return (row[key] = [])
+    row[key] = value.split(',')
   },
-  async postreat({ flq, model, field, value, row }: EventParam.ModelPostreatEvent) {
+  async postreat({ flq, model, key, value, row }: EventParam.ModelPostreatEvent) {
     if (!model.postreat) return
-    const nv = await model.postreat.call(flq, value, row)
-    row[field] = nv
+    row[key] = await model.postreat.call(flq, value, row)
   },
+}
+
+function getModel(flq: Flq, vf: string) {
+  const {
+    fieldMap: { table },
+    model,
+  } = flq
+  const ont = table[0]
+  if (ont) {
+    return model![ont][vf]
+  }
+  const fs = vf.split('.')
+  if (fs.length > 1) {
+    return model![fs[0]][fs[1]]
+  }
+  for (let ti = 0; ti < table.length; ti++) {
+    const t = table[ti]
+    const n = model![t]
+    if (!n) continue
+    const m = n[vf]
+    if (m) return m
+  }
 }

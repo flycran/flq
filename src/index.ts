@@ -127,7 +127,7 @@ namespace methods {
     if (as) {
       f = f + ' as ' + escape(as)
     }
-    this.fieldMap.field[as || field] = [tb]
+    this.fieldMap.field[as || field] = [tb, field]
     return f
   }
 
@@ -709,6 +709,7 @@ export async function postreat(option: EventParam.PostreatEvent) {
   const modMap: Map<string, string> = new Map()
   /**获取样本数据 */
   const ond = data[0]
+  console.log(fieldMap.field)
   if (ond) {
     /**字段数组 */
     const fields = Object.keys(ond)

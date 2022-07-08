@@ -187,13 +187,17 @@ export namespace ModelOption {
     /**更新值 */
     update: ((this: Flq, value: Record<string, any>) => Promise<any>) | any
     /**虚拟字段获取 */
-    get: (this: Flq, row: Data) => Promise<any>
+    get(this: Flq, row: Data): Promise<any>
+
     /**虚拟字段设置 */
-    set: (this: Flq, value: any, row: Data) => Promise<void>
+    set(this: Flq, value: any, row: Data): Promise<void>
+
     /**预处理 */
-    pretreat: (this: Flq, value: any, data: Data) => Promise<any>
+    pretreat(this: Flq, value: any, data: Data): Promise<any>
+
     /**后处理 */
-    postreat: (this: Flq, value: any, data: Data) => Promise<any>
+    postreat(this: Flq, value: any, data: Data): Promise<any>
+
     /**重命名 */
     rename: string
     /**转数组 */
@@ -223,9 +227,8 @@ export namespace EventParam {
 
   export interface ModelPostreatEvent {
     flq: Flq
-    fields: string[]
     model: Partial<ModelOption.Ops>
-    field: string
+    key: string
     value: any
     row: Record<string, any>
   }
