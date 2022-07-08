@@ -1,6 +1,7 @@
 // 公共类型声明
 import {Flq} from './index'
 import {Connection} from 'mysql2'
+import exp = require("constants");
 
 /**连接配置 */
 export interface ConnectOption {
@@ -186,6 +187,7 @@ export namespace ModelOption {
     default: ((this: Flq, value: Record<string, any>) => Promise<any>) | any
     /**更新值 */
     update: ((this: Flq, value: Record<string, any>) => Promise<any>) | any
+
     /**虚拟字段获取 */
     get(this: Flq, row: Data): Promise<any>
 
@@ -212,20 +214,32 @@ export type ModelOption = ModelOption.Option
 
 export type PromiseSet<T = any> = Set<Promise<T>>
 
-export namespace EventParam {
-  export interface PostreatEvent {
+export namespace HooksEventParam {
+  export interface Petreat {
+    flq: Flq
+    row: Record<string, any>
+  }
+
+  export interface FieldPetreat {
+    flq: Flq
+    key: string
+    value: any
+    row: Record<string, any>
+  }
+
+  export interface Postreat {
     flq: Flq
     data: Data[] | Data
     method: string
     connect: Connection
   }
 
-  export interface RowPostreatEvent {
+  export interface RowPostreat {
     flq: Flq
     row: Record<string, any>
   }
 
-  export interface ModelPostreatEvent {
+  export interface FieldPostreat {
     flq: Flq
     model: Partial<ModelOption.Ops>
     key: string

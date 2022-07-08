@@ -9,7 +9,6 @@ import {AsyncEvent} from './event'
 
 import {
   ConnectOption,
-  EventParam,
   FieldOption,
   FlqOption,
   FromOption,
@@ -17,7 +16,6 @@ import {
   LimitOption,
   ModelOption,
   OrderOption,
-  PromiseSet,
   SetOption,
   SubFieldOption,
   ValueOption,
@@ -29,7 +27,6 @@ import * as templates from './templates'
 /**安全处理 */
 export const escape = $escape
 /**格式化需要的正则表达式 */
-const FORMATREG = / \[(.+?)]/g
 const RGE = /^.+\(.*?\)$/
 
 /**钩子 */
