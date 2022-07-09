@@ -17,18 +17,18 @@ export class AsyncEvent {
     this.emit('removelistener', { type, listener })
     return l.delete(listener)
   }
-  emit(type: string, ...events: any[]) {
-    return new Promise((e, r) => {
-      const ls = this.listener.get(type)
-      if (!ls) return
-      const als: Set<Promise<any>> = new Set()
-      AsyncErgodic(ls, (e) => {
-        const r = e(...events)
-        if (r instanceof Promise) als.add(r)
-      })
-        .then(e)
-        .catch(r)
+  async emit(type: string, ...events: any[]) {
+    let date = new Date()
+    const ls = this.listener.get(type)
+    if (!ls) return
+    const als: Set<Promise<any>> = new Set()
+    await AsyncErgodic(ls, (e) => {
+      const r = e(...events)
+      if (r instanceof Promise) als.add(r)
     })
+    console.log(
+      `emit: ${type} It took ${new Date().valueOf() - date.valueOf()}ms`
+    )
   }
 }
 // Array

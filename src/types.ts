@@ -93,8 +93,6 @@ export interface FlqOption {
   insertId?: boolean
   /**完整列数 */
   foundRows?: string
-  /**强制遍历响应数据 */
-  traversal?: boolean
 }
 
 /**基本索引对象 */
@@ -196,9 +194,16 @@ export namespace ModelOption {
     /**后处理 */
     postreat: (this: Flq, value: any, data: Data) => Promise<any> | any
     /**重命名 */
-    rename: ((this: Flq, value: any, row: Data) => Promise<string>) | string
+    rename:
+      | ((
+          this: Flq,
+          key: string,
+          value: any,
+          row: Data
+        ) => Promise<string> | string)
+      | string
     /**转数组 */
-    toArray: boolean
+    toArray: boolean | string
     /**子表连接 */
     sub: Sub
   }
@@ -228,11 +233,6 @@ export namespace HooksEvent {
     data: Data[] | Data
     method: string
     connect: Connection
-  }
-
-  export interface RowPostreat {
-    flq: Flq
-    row: Record<string, any>
   }
 
   export interface FieldPostreat {

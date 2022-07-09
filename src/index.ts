@@ -128,7 +128,7 @@ namespace methods {
     if (as) {
       f = f + ' as ' + escape(as)
     }
-    this.fieldMap.field[as || field] = [tb, field]
+    this.fieldMap.field[tb + '.' + field] = as || field
     return f
   }
 
@@ -297,8 +297,7 @@ namespace methods {
       const ks: any[] = []
       const vs: any[] = []
       for (const k in option) {
-        let v = option[k]
-        if (Array.isArray(v)) v = v.join(',')
+        const v = option[k]
         ks.push($field(k))
         vs.push($field(escape(v)))
       }
@@ -311,8 +310,7 @@ namespace methods {
     if (typeof option === 'object') {
       const arr: any[] = []
       for (const k in option) {
-        let v = option[k]
-        if (Array.isArray(v)) v = v.join(',')
+        const v = option[k]
         arr.push(`${$field(k)} = ${escape(v)}`)
       }
       return arr.join(', ')
@@ -320,13 +318,13 @@ namespace methods {
     throw new FlqError('methods.set: 不受支持的参数类型')
   }
 
-  // export function subField(option: SubFieldOption[]): SubFieldOption.Obj {
-  //   const obj: SubFieldOption.Obj = {}
-  //   for (let i = 0; i < option.length; i++) {
-  //     const e = option[i]
-  //   }
-  //   return obj
-  // }
+  export function subField(option: SubFieldOption[]): SubFieldOption.Obj {
+    const obj: SubFieldOption.Obj = {}
+    for (let i = 0; i < option.length; i++) {
+      const e = option[i]
+    }
+    return obj
+  }
 }
 
 async function slot(e: string, v: any, flq: Flq) {
@@ -381,7 +379,7 @@ export class Flq {
   /**字段映射 */
   fieldMap = {
     table: [] as string[],
-    field: {} as Record<string, string[]>,
+    field: {} as Record<string, string>,
   }
   /**sql语句 */
   sql: string = ''
@@ -637,7 +635,6 @@ export class Flq {
     const { option: sp } = db
     if (sp.virtualSet) {
       Object.assign(sp.virtualSet, ...option)
-      db.option.traversal = true
     } else {
       sp.virtualSet = Object.assign({}, ...option)
     }
@@ -645,13 +642,13 @@ export class Flq {
   }
 
   /**子字段 */
-  // subField(...option: SubFieldOption[]) {
-  //   const db = this.clone()
-  //   const { option: sp } = db
-  //   if (sp.subField) Object.assign(sp.subField, methods.subField(option))
-  //   else sp.subField = Object.assign({}, methods.subField(option))
-  //   return db
-  // }
+  subField(...option: SubFieldOption[]) {
+    const db = this.clone()
+    const { option: sp } = db
+    if (sp.subField) Object.assign(sp.subField, methods.subField(option))
+    else sp.subField = Object.assign({}, methods.subField(option))
+    return db
+  }
 
   /**获取上一次查询的总列数 */
   foundRows() {

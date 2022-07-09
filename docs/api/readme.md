@@ -36,11 +36,12 @@ flq.test(async () => {
 
 `query(sql: string, connection?: Connection | Pool): Promise<any>`
 
-传入一个sql语句发起查询，可自定义执行查询的连接
+传入一个 sql 语句发起查询，可自定义执行查询的连接
 
 - **sql**
 
-  sql语句
+  sql 语句
+
 - **connection**
 
   连接
@@ -49,29 +50,29 @@ flq.test(async () => {
 
 `format(template: string): string`
 
-格式化sql语句
+格式化 sql 语句
 
 - **template**
 
-  sql模板。所用可用的模板可以在[flq/src/templates](https://gitee.com/flycran/flq/blob/master/src/templates.ts)
+  sql 模板。所用可用的模板可以在[flq/src/templates](https://gitee.com/flycran/flq/blob/master/src/templates.ts)
   下找到。
 
 ## send
 
 `send(template: string): Promise<any>`
 
-发送sql语句。与`query`不同，`send`将自动调用`format`生成sql语句，并调用模型处理。
+发送 sql 语句。与`query`不同，`send`将自动调用`format`生成 sql 语句，并调用模型处理。
 
 - **template**
 
-  sql模板。所用可用的模板可以在[flq/src/templates](https://gitee.com/flycran/flq/blob/master/src/templates.ts)
+  sql 模板。所用可用的模板可以在[flq/src/templates](https://gitee.com/flycran/flq/blob/master/src/templates.ts)
   下找到。
 
 ## clone
 
 `clone(): Flq`
 
-克隆`flq`实例，将继承mysql连接和FLQ模型，拷贝sql配置和字段映射。
+克隆`flq`实例，将继承 mysql 连接和 FLQ 模型，拷贝 sql 配置和字段映射。
 
 ## from
 
@@ -91,27 +92,27 @@ flq.test(async () => {
 - **option**
   字段配置，可选字符串、字符串数组或者对象
 
-    - 当传入字符串时
+  - 当传入字符串时
 
-      将查询该字段，支持显式指定表名，例如：`'student.name'`
+    将查询该字段，支持显式指定表名，例如：`'student.name'`
 
-      :::tip
-      `Flq`所有需要用到字段名的地方都支持显式指定表名，下文不再赘述
-      :::
+    :::tip
+    `Flq`所有需要用到字段名的地方都支持显式指定表名，下文不再赘述
+    :::
 
-      ```js
-      field('name', 'age')
-      // 'name', 'age'
-      ```
+    ```js
+    field('name', 'age')
+    // 'name', 'age'
+    ```
 
-    - 当传入字符串数组时
+  - 当传入字符串数组时
 
-      将查询所有数组中的字段，与上述用法类似，通常配合聚合方法使用。
+    将查询所有数组中的字段，与上述用法类似，通常配合聚合方法使用。
 
-      ```js
-      field(['name', 'age'])
-      // 'name', 'age'
-      ```
+    ```js
+    field(['name', 'age'])
+    // 'name', 'age'
+    ```
 
 - 当传入对象时
 
@@ -151,6 +152,12 @@ flq.test(async () => {
   // AVG(`chinese`) as '语文', AVG(`math`) as '数学', AVG(`english`) as '英语'
   ```
 
+## where
+
+`where(...option: WhereOption[]): Flq`
+
+查询条件
+
 ## group
 
 `group(option: string): Flq`
@@ -175,39 +182,42 @@ group('gender')
 
   传入对象或字符串数组
 
-    - 传入对象时
+  - 传入对象时
 
-      `{ page: number, size: number }`
+    `{ page: number, size: number }`
 
-        - page
+    - page
 
-          页码
+      页码
 
-        - page
+    - page
 
-          每页条数
-      ```js
-      limit({
-        page: 1,
-        size: 5
-      })
-      // LIMIT 0, 5
-      ```
-    - 传入数值时
+      每页条数
 
-      `[offset: number, limit: number]`
+    ```js
+    limit({
+      page: 1,
+      size: 5,
+    })
+    // LIMIT 0, 5
+    ```
 
-        - offset
+  - 传入数值时
 
-          偏移量
+    `[offset: number, limit: number]`
 
-        - limit
+    - offset
 
-          条数
-      ```js
-      limit(5, 5)
-      // LIMIT 5, 5
-      ```
+      偏移量
+
+    - limit
+
+      条数
+
+    ```js
+    limit(5, 5)
+    // LIMIT 5, 5
+    ```
 
 ## size
 
@@ -235,6 +245,61 @@ group('gender')
 
 :::
 
+## order
+
+`order(option: OrderOption, defOp?: OrderOption.Op): Flq`
+
+配置排序
+
+- **option**
+
+  传入字符串、字符串数组或对象
+
+  - 传入字符串时
+
+    按传入的字段排序，排序规则取决于`defOp`的值
+
+    ```js
+    order('age')
+    // ORDER BY `age`
+    order('age', -1)
+    // ORDER BY `age` DESC
+    ```
+
+  - 传入数组时
+
+    将所有数组中的字段按顺序排序，排序规则取决于`defOp`的值
+
+    ```js
+    order(['age', 'id'])
+    // ORDER BY `age`, `id`
+    order(['age', 'id'], -1)
+    // ORDER BY `age` DESC, `id` DESC
+    ```
+
+  - 传入对象时
+
+    将按照`value`的值决定排序规则
+
+    ```js
+    order({ age: 1, id: -1 })
+    // ORDER BY `age`, `id` DESC
+    ```
+
+    当键名是排序规则时，将`value`重新传入`order`解析。可以传入所有`option`允许的值，但通常配合数组使用。
+
+    ```js
+    order({
+      1: ['id', 'age'],
+      '-1': ['chinese', 'math', 'english'],
+    })
+    // ORDER BY `id`, `age`, `chinese` DESC, `math` DESC, `english` DESC
+    ```
+
+- **defOp**
+
+  默认排序规则，可用的排序规则为`1`、`-1`、`ASC`、`DESC`。其中的`1`和`-1`可以是字符串或数值
+
 ## foundRows
 
 `foundRows(): Flq`
@@ -245,12 +310,12 @@ group('gender')
 const db = flq
   .from('student')
   .field('name', 'age', 'chinese', 'math', 'english')
-  .limit({page: 1, size: 3})
+  .limit({ page: 1, size: 3 })
   .foundRows()
 const result = await db.find()
 console.log(db.sql)
 console.log(result)
-console.log('总列数:', db.total);
+console.log('总列数:', db.total)
 ```
 
 ## find

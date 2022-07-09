@@ -24,15 +24,23 @@ const flq = new lib_1.Flq({
                 return value;
             },
         },
+        avg: {
+            get(row) {
+                return (row.chinese + row.math + row.english) / 3;
+            },
+            set(value, row) {
+                console.log(value, row);
+            },
+        },
     },
 });
 flq.test(async () => {
-    // const db = flq.from('student').field('name', 'association')
-    // const result = await db.find()
-    // console.log(db.sql)
-    // console.log(result)
-    const db = flq.from('student').where({ id: 8 }).set({ age: 10 });
-    const result = await db.update();
+    const db = flq
+        .from('student')
+        .field('name', 'chinese', 'math', 'english')
+        .virtualGet('avg');
+    const result = await db.find();
     console.log(db.sql);
     console.log(result);
 });
+//# sourceMappingURL=index.js.map

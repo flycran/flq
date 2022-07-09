@@ -23,7 +23,7 @@ footer: 湘ICP备2022005467号
 - **数据库的多表联合查询？**
 - **数据库的递归迭代查询？**
 
-## FLQ ![npm type version](https://badgen.net/npm/v/flq) 都能满足！
+## FLQ [![npm type version](https://badgen.net/npm/v/flq) 都能满足！](https://www.npmjs.com/package/flq)
 
 ### 步进式配置
 

@@ -35,43 +35,60 @@ export const fieldPretreat = {
       row[key] = await model.default
     }
   },
+  async virtualSet({ flq, model, key, row }: HooksEvent.FieldPetreat) {
+    const { virtualSet } = flq.option
+    if (!virtualSet) return
+    if (!model.set) return
+    const value = virtualSet[key]
+    if (!value) return
+    await model.set.call(flq, value, row)
+  },
+  toArray({ model, key, value, row }: HooksEvent.FieldPostreat) {
+    if (value === undefined) return
+    if (!model.toArray) return
+    row[key] = value.split(
+      typeof model.toArray === 'string' ? model.toArray : ','
+    )
+  },
 }
 /**后处理 */
 export const postreat = {
   async postreat(option: HooksEvent.Postreat) {
     const { flq, data } = option
-    const { traversal } = flq.option
     if (!Array.isArray(data)) return
-    const { model: mod, fieldMap } = flq
-    if (!mod) return
-    // 模型映射关系
-    const modMap: Map<string, string> = new Map()
+    const { model, fieldMap } = flq
+    if (!model) return
     /**获取样本数据 */
     const ond = data[0]
-    if (ond) {
-      /**字段数组 */
-      const fields = Object.keys(ond)
-      fields.forEach((f) => {
-        const map = fieldMap.field[f]
-        if (!map) return
-        const m1: any = mod[map[0]]
-        if (!m1) return
-        const m2 = m1[map[1]]
-        if (m2) modMap.set(f, m2)
+    if (!ond) return
+    /**字段数组 */
+    const models: Set<any> = new Set()
+    const ps: PromiseSet = new Set()
+    // 循环后处理
+    // 根据表格、字段映射和模型提取所有需要进行后处理的model
+    for (let i = 0; i < fieldMap.table.length; i++) {
+      const table = fieldMap.table[i]
+      const mod = model[table]
+      for (const k in mod) {
+        const model = mod[k]
+        const key = fieldMap.field[table + '.' + k] || k
+        models.add({ model, key })
+      }
+    }
+    // 遍历数据，触发后处理
+    for (let i = 0; i < data.length; i++) {
+      const row = data[i]
+      models.forEach((option) => {
+        ps.add(
+          hooks.emit('fieldPostreat', {
+            ...option,
+            flq,
+            value: row[option.key],
+            row,
+          })
+        )
       })
     }
-    // 映射表为空且没有强制遍历
-    if (!modMap.size && !traversal) return
-    const ps: PromiseSet = new Set()
-    // 遍历数据
-    data.forEach((row: any) => {
-      ps.add(hooks.emit('rowPostreat', { flq, row }))
-      // 遍历字段映射表
-      modMap.forEach((model, key) => {
-        const value = row[key]
-        ps.add(hooks.emit('fieldPostreat', { flq, model, key, value, row }))
-      })
-    })
     await Promise.all(ps)
   },
   async insertId({ flq, data, connect }: HooksEvent.Postreat) {
@@ -88,51 +105,35 @@ export const postreat = {
   },
 }
 /**后处理数据列 */
-export const rowPostreat = {
-  async virtualGet({ row, flq }: HooksEvent.RowPostreat) {
-    if (!flq.option.virtualGet) return
-    const {
-      option: { virtualGet },
-      model,
-    } = flq
-    const ps: PromiseSet = new Set()
-    for (let vfi = 0; vfi < virtualGet.length; vfi++) {
-      const vf = virtualGet[vfi]
-      const mod = getModel(flq, vf)
-      // 找不到模型
-      if (!mod || !mod.get) {
-        console.log(
-          `Warning!rowPostreatHooks.virtualGet:找不到虚拟字段"${vf}"的定义`
-        )
-        continue
-      }
-      ps.add(
-        new Promise((e, r) => {
-          row[vf] = mod.get!.call(flq, row)
-        })
-      )
-    }
-    await Promise.all(ps)
+export const rowPostreat = {}
+/**后处理数据字段 */
+export const fieldPostreat = {
+  toArray({ model, key, value, row }: HooksEvent.FieldPostreat) {
+    if (value === undefined) return
+    if (!model.toArray) return
+    if (!value) return (row[key] = [])
+    row[key] = value.split(
+      typeof model.toArray === 'string' ? model.toArray : ','
+    )
   },
-  async subField({ row, flq }: HooksEvent.RowPostreat) {
+  async virtualGet({ flq, model, key, row }: HooksEvent.FieldPostreat) {
+    const { virtualGet } = flq.option
+    if (!virtualGet) return
+    if (!model.get) return
+    if (!virtualGet.includes(key)) return
+    row[key] = await model.get.call(flq, row)
+  },
+  async subField({ row, flq }: HooksEvent.FieldPostreat) {
     if (!flq.option.subField) return
     const {
       option: { subField },
       model,
     } = flq
   },
-}
-/**后处理数据字段 */
-export const fieldPostreat = {
-  toArray({ model, key, value, row }: HooksEvent.FieldPostreat) {
-    if (!model.toArray) return
-    if (!value) return (row[key] = [])
-    row[key] = value.split(',')
-  },
   async rename({ flq, model, key, value, row }: HooksEvent.FieldPostreat) {
     if (!model.rename) return
     let k = model.rename
-    if (typeof k === 'function') k = await k.call(flq, value, row)
+    if (typeof k === 'function') k = await k.call(flq, key, value, row)
     row[k] = value
     delete row[key]
   },
@@ -140,26 +141,4 @@ export const fieldPostreat = {
     if (!model.postreat) return
     row[key] = await model.postreat.call(flq, value, row)
   },
-}
-/**获取模型 */
-function getModel(flq: Flq, vf: string) {
-  const {
-    fieldMap: { table },
-    model,
-  } = flq
-  const ont = table[0]
-  if (ont) {
-    return model![ont][vf]
-  }
-  const fs = vf.split('.')
-  if (fs.length > 1) {
-    return model![fs[0]][fs[1]]
-  }
-  for (let ti = 0; ti < table.length; ti++) {
-    const t = table[ti]
-    const n = model![t]
-    if (!n) continue
-    const m = n[vf]
-    if (m) return m
-  }
 }

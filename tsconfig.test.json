@@ -11,9 +11,12 @@
     //    "declarationDir": "./test",
     "noImplicitAny": false,
     "forceConsistentCasingInFileNames": true,
-    "types" : ["node"],
+    "types": [
+      "node"
+    ],
     "strict": true,
     "skipLibCheck": true,
+    "sourceMap": true,
     "incremental": true
   },
   "files": [

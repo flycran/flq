@@ -7,17 +7,17 @@
 它看起来应该像这样：
 
 | id  | name | gender | chinese | math | english | class | age | association |
-|-----|------|--------|---------|------|---------|-------|-----|-------------|
-| 1   | 张三   | 男      | 86      | 78   | 65      | 2     | 11  | 1,5,6       |
-| 2   | 李四   | 女      | 56      | 56   | 23      | 1     | 12  | 2,4         |
-| 3   | 王五   | 女      | 89      | 41   | 91      | 2     | 10  | 3,6         |
-| 4   | 赵六   | 男      | 86      | 97   | 78      | 3     | 11  |             |
-| 5   | 钱七   | 男      | 91      | 100  | 86      | 4     | 11  | 2,3,4       |
-| 6   | 郑八   | 女      | 86      | 63   | 75      | 3     | 13  | 1,3,5,6     |
-| 7   | 周九   | 女      | 65      | 57   | 36      | 1     | 12  | 3,5         |
-| 8   | 孙十   | 男      | 58      | 63   | 75      | 4     | 13  | 1,2         |
+| --- | ---- | ------ | ------- | ---- | ------- | ----- | --- | ----------- |
+| 1   | 张三 | 男     | 86      | 78   | 65      | 2     | 11  | 1,5,6       |
+| 2   | 李四 | 女     | 56      | 56   | 23      | 1     | 12  | 2,4         |
+| 3   | 王五 | 女     | 89      | 41   | 91      | 2     | 10  | 3,6         |
+| 4   | 赵六 | 男     | 86      | 97   | 78      | 3     | 11  |             |
+| 5   | 钱七 | 男     | 91      | 100  | 86      | 4     | 11  | 2,3,4       |
+| 6   | 郑八 | 女     | 86      | 63   | 75      | 3     | 13  | 1,3,5,6     |
+| 7   | 周九 | 女     | 65      | 57   | 36      | 1     | 12  | 3,5         |
+| 8   | 孙十 | 男     | 58      | 63   | 75      | 4     | 13  | 1,2         |
 
-你可以在[演示表格](/table/student.html)处找到此表的sql语句。
+你可以在[演示表格](/table/student.html)处找到此表的 sql 语句。
 
 ## 基础查询
 
@@ -68,7 +68,7 @@ console.log(result)
 ```js
 flq.test(async () => {
   // where 查询条件
-  const db = flq.from('student').where({gender: '女'})
+  const db = flq.from('student').where({ gender: '女' })
   const result = await db.find()
   console.log(db.sql)
   console.log(result)
@@ -108,7 +108,7 @@ SELECT * FROM `student` WHERE `gender` = '女'
 
 :::tip
 
-前往[API文档](/api/flq.html#where)查看`where`的详细用法
+前往[API 文档](/api/#where)查看`where`的详细用法
 
 :::
 
@@ -120,9 +120,9 @@ SELECT * FROM `student` WHERE `gender` = '女'
 flq.test(async () => {
   const db = flq
     .from('student')
-    .where({gender: '女'})
+    .where({ gender: '女' })
     // field 查询的字段
-    .field('name', {gender: 'sex'})
+    .field('name', { gender: 'sex' })
   const result = await db.find()
   console.log(db.sql)
   console.log(result)
@@ -143,7 +143,7 @@ SELECT `name`, `gender` as 'sex' FROM `student` WHERE `gender` = '女'
 
 :::tip
 
-前往[API文档](/api/flq.html#field)查看`field`的详细用法
+前往[API 文档](/api/#field)查看`field`的详细用法
 
 :::
 
@@ -151,14 +151,14 @@ SELECT `name`, `gender` as 'sex' FROM `student` WHERE `gender` = '女'
 
 #### 演示
 
-```js 
+```js
 flq.test(async () => {
   // 在field中使用AVG聚合方法
   const db = flq.from('student').field({
-    AVG: ['chinese', 'math', 'english']
+    AVG: ['chinese', 'math', 'english'],
   })
   const result = await db.find()
-  console.log(db.sql);
+  console.log(db.sql)
   console.log(result)
 })
 ```
@@ -172,7 +172,7 @@ SELECT AVG(`chinese`) as 'chinese', AVG(`math`) as 'math', AVG(`english`) as 'en
 
 :::tip
 
-前往[API文档](/api/flq.html#field)查看`field`的详细用法
+前往[API 文档](/api/#field)查看`field`的详细用法
 
 :::
 
@@ -218,7 +218,7 @@ SELECT AVG(`chinese`) as 'chinese', AVG(`math`) as 'math', AVG(`english`) as 'en
 
 :::tip
 
-`field`和`group`的配置没有先后之分，但为了良好的可读性，一般会遵循sql的顺序配置
+`field`和`group`的配置没有先后之分，但为了良好的可读性，一般会遵循 sql 的顺序配置
 
 :::
 
@@ -258,7 +258,7 @@ SELECT `name`, `age`, `chinese`, `math`, `english` FROM `student` ORDER BY `age`
 
 :::tip
 
-前往[API文档](/api/flq.html#order)查看`order`的详细用法
+前往[API 文档](/api/#order)查看`order`的详细用法
 
 :::
 
@@ -270,7 +270,7 @@ SELECT `name`, `age`, `chinese`, `math`, `english` FROM `student` ORDER BY `age`
 const db = flq
   .from('student')
   .field('name', 'age', 'chinese', 'math', 'english')
-  .limit({page: 1, size: 3})
+  .limit({ page: 1, size: 3 })
 const result = await db.find()
 console.log(db.sql)
 console.log(result)
@@ -289,7 +289,7 @@ SELECT `name`, `age`, `chinese`, `math`, `english` FROM `student` LIMIT 0, 3
 
 :::tip
 
-你也可以使用`page`和`size`来分别配置每页条数和页码，详情移步[API文档](/api/flq.html#page)
+你也可以使用`page`和`size`来分别配置每页条数和页码，详情移步[API 文档](/api/#page)
 
 :::
 
@@ -301,12 +301,12 @@ SELECT `name`, `age`, `chinese`, `math`, `english` FROM `student` LIMIT 0, 3
 const db = flq
   .from('student')
   .field('name', 'age', 'chinese', 'math', 'english')
-  .limit({page: 1, size: 3})
+  .limit({ page: 1, size: 3 })
   .foundRows()
 const result = await db.find()
 console.log(db.sql)
 console.log(result)
-console.log('总列数:', db.total);
+console.log('总列数:', db.total)
 ```
 
 #### 结果
@@ -323,11 +323,105 @@ SELECT SQL_CALC_FOUND_ROWS `name`, `age`, `chinese`, `math`, `english` FROM `stu
 
 :::tip
 
-Flq内部使用`SQL_CALC_FOUND_ROWS`来返回总列数，将结果保存在`Flq`实例下，因此务必在调用`find`前保存`Flq`实例。
+Flq 内部使用`SQL_CALC_FOUND_ROWS`来返回总列数，将结果保存在`Flq`实例下，因此务必在调用`find`前保存`Flq`实例。
 若该实例可能被多次`find`，应调用`clone`方法克隆一个独立的`Flq`实例
 
 :::
 
 ## 虚拟字段
 
-。。。
+#### 演示、
+
+<CodeGroup>
+  <CodeGroupItem title="模型配置" active>
+
+```js
+const flq = new Flq(
+  {
+    pool: true, // 使用连接池 !推荐使用
+    user: 'root', // 登陆用户
+    password: process.env.SQLPASSWORD, // 登陆密码
+    database: 'test', // 数据库名
+  },
+  {
+    student: {
+      avg: {
+        get(row) {
+          return (row.chinese + row.math + row.english) / 3
+        },
+      },
+    },
+  }
+)
+```
+
+  </CodeGroupItem>
+
+  <CodeGroupItem title="sql配置">
+
+```js
+flq.test(async () => {
+  const db = flq
+    .from('student')
+    .field('name', 'chinese', 'math', 'english')
+    .virtualGet('avg')
+  const result = await db.find()
+  console.log(db.sql)
+  console.log(result)
+})
+```
+
+  </CodeGroupItem>
+</CodeGroup>
+
+#### 结果
+
+```sh
+SELECT `name`, `chinese`, `math`, `english` FROM `student`
+[
+  {
+    name: '名字:张三',
+    chinese: 86,
+    math: 78,
+    english: 65,
+    avg: 76.33333333333333
+  },
+  { name: '名字:李四', chinese: 56, math: 56, english: 23, avg: 45 },
+  {
+    name: '名字:王五',
+    chinese: 89,
+    math: 41,
+    english: 91,
+    avg: 73.66666666666667
+  },
+  { name: '名字:赵六', chinese: 86, math: 97, english: 78, avg: 87 },
+  {
+    name: '名字:钱七',
+    chinese: 91,
+    math: 100,
+    english: 86,
+    avg: 92.33333333333333
+  },
+  {
+    name: '名字:郑八',
+    chinese: 86,
+    math: 63,
+    english: 75,
+    avg: 74.66666666666667
+  },
+  {
+    name: '名字:周九',
+    chinese: 65,
+    math: 57,
+    english: 36,
+    avg: 52.666666666666664
+  },
+  {
+    name: '名字:孙十',
+    chinese: 58,
+    math: 63,
+    english: 75,
+    avg: 65.33333333333333
+  }
+]
+```
