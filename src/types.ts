@@ -140,8 +140,8 @@ export namespace FieldOption {
 export type FieldOption = FieldOption.Option
 /**排序 */
 export namespace OrderOption {
-  export type Op = 'ASC' | 'DESC' | '1' | '-1'
-  type OrderObj = { [x: Op | string]: Option | string }
+  export type Op = 'ASC' | 'DESC' | '1' | '-1' | 1 | -1
+  type OrderObj = { [x: Exclude<Op, 1 | -1> | string]: Op | Option | string }
   type OrderArr = string[]
   export type Option = string | OrderObj | OrderArr
 }

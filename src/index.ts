@@ -5,7 +5,7 @@ import {
   escape as $escape,
   Pool,
 } from 'mysql2'
-import {AsyncEvent} from './event'
+import { AsyncEvent } from './event'
 
 import {
   ConnectOption,
@@ -248,7 +248,7 @@ namespace methods {
       return $field(option) + ' DESC'
     }
     if (Array.isArray(option)) {
-      if (!defOp || defOp === 'ASC' || defOp == '1')
+      if (!defOp || defOp === 'ASC' || defOp == '1' || defOp === 1)
         return option.map((e) => $field(e)).join(', ')
       return option.map((e) => $field(e) + ' DESC').join(', ')
     }
@@ -258,8 +258,9 @@ namespace methods {
         //@ts-ignore
         const v = option[key]
         if (orderOp.has(key)) {
+          //@ts-ignore
           arr.push(order(v, key as OrderOption.Op))
-        } else if (v === 'ASC' || v == '1') arr.push($field(key))
+        } else if (v === 'ASC' || v === '1' || v === 1) arr.push($field(key))
         else arr.push($field(key) + ' DESC')
       }
       return arr.join(', ')
@@ -332,11 +333,11 @@ async function slot(e: string, v: any, flq: Flq) {
   switch (e) {
     case 'value':
       if (!v) throw new FlqError('Flq.format:缺少必选配置value')
-      await hooks.emit('pretreat', {flq, row: v})
+      await hooks.emit('pretreat', { flq, row: v })
       return methods.value(v)
     case 'set':
       if (!v) throw new FlqError('Flq.format:缺少必选配置set')
-      await hooks.emit('pretreat', {flq, row: v})
+      await hooks.emit('pretreat', { flq, row: v })
       return methods.set(v)
     case 'from':
       if (!v) throw new FlqError('Flq.format:缺少必选配置from')
@@ -401,7 +402,7 @@ export class Flq {
 
   /**获取连接 */
   getConnect(): Connection | Promise<Connection> {
-    const {pool} = this
+    const { pool } = this
     return new Promise((e, r) => {
       if (pool) {
         pool.getConnection((err, ctn) => {
@@ -472,18 +473,23 @@ export class Flq {
    * @returns 数据
    */
   async send(template: string): Promise<any> {
-    const {option} = this
+    const { option } = this
     //@ts-ignore
     const ctn: Connection = await this.getConnect()
     const sql = await this.format(template)
     const data: any = await this.query(sql, ctn)
-    await hooks.emit('postreat', {flq: this, data, method: template, connect: ctn})
+    await hooks.emit('postreat', {
+      flq: this,
+      data,
+      method: template,
+      connect: ctn,
+    })
     // 释放连接
     if (this.pool) {
       //@ts-ignore
       ctn.release()
     }
-    hooks.emit('send', {data, method: template, option, sql})
+    hooks.emit('send', { data, method: template, option, sql })
     return data
   }
 
@@ -502,7 +508,7 @@ export class Flq {
   /**设置表格 */
   from(...option: FromOption[]) {
     const db = this.clone()
-    const {option: sp} = db
+    const { option: sp } = db
     const sql = option.map((e) => methods.from.call(db, e)).join(', ')
     if (sp.from) {
       sp.from += ', ' + sql
@@ -515,7 +521,7 @@ export class Flq {
   /**设置字段 */
   field(...option: FieldOption[]) {
     const db = this.clone()
-    const {option: sp} = db
+    const { option: sp } = db
     const sql = option.map((e) => methods.field.call(db, e)).join(', ')
     if (sp.field) {
       sp.field += ', ' + sql
@@ -528,7 +534,7 @@ export class Flq {
   /**设置条件 */
   where(...option: WhereOption[]) {
     const db = this.clone()
-    const {option: sp} = db
+    const { option: sp } = db
     const sql = option.map((e) => methods.where(e)).join(' AND ')
     if (sp.where) {
       sp.where += ' AND ' + sql
@@ -541,7 +547,7 @@ export class Flq {
   /**插入数据 */
   value(option: ValueOption) {
     const db = this.clone()
-    const {option: sp} = db
+    const { option: sp } = db
     if (sp.value) {
       Object.assign(sp.value, option)
     } else {
@@ -553,7 +559,7 @@ export class Flq {
   /**设置值 */
   set(option: SetOption) {
     const db = this.clone()
-    const {option: sp} = db
+    const { option: sp } = db
     if (sp.set) {
       Object.assign(sp.set, option)
     } else {
@@ -565,7 +571,7 @@ export class Flq {
   /**排序 */
   order(option: OrderOption, defOp?: OrderOption.Op) {
     const db = this.clone()
-    const {option: sp} = db
+    const { option: sp } = db
     const sql = methods.order(option, defOp)
     if (sp.order) {
       sp.order += ', ' + sql
@@ -578,7 +584,7 @@ export class Flq {
   /**分组 */
   group(option: GroupOption) {
     const db = this.clone()
-    const {option: sp} = db
+    const { option: sp } = db
     sp.group = methods.group(option)
     return db
   }
@@ -586,7 +592,7 @@ export class Flq {
   /**分页 */
   limit(...option: LimitOption) {
     const db = this.clone()
-    const {option: sp} = db
+    const { option: sp } = db
     sp.limit = methods.limit(option)
     return db
   }
@@ -594,7 +600,7 @@ export class Flq {
   /**每页条数 */
   size(size: number) {
     const db = this.clone()
-    const {option: sp} = db
+    const { option: sp } = db
     if (size > 0) {
       sp.limit = [0, size]
       return db
@@ -605,9 +611,9 @@ export class Flq {
   /**页码 */
   page(page: number) {
     const db = this.clone()
-    const {option: sp} = db
+    const { option: sp } = db
     if (page > 0) {
-      const {limit} = sp
+      const { limit } = sp
       if (!limit || !limit[1])
         throw new FlqError('Flq.page: 必须先设置每页条数')
       limit[0] = (page - 1) * limit[1]
@@ -619,7 +625,7 @@ export class Flq {
   /**虚拟获取 */
   virtualGet(...option: string[]) {
     const db = this.clone()
-    const {option: sp} = db
+    const { option: sp } = db
     if (sp.virtualGet) sp.virtualGet.push(...option)
     else sp.virtualGet = [...option]
     return db
@@ -628,7 +634,7 @@ export class Flq {
   /**虚拟插入 */
   virtualSet(...option: FlqOption['virtualSet'][]) {
     const db = this.clone()
-    const {option: sp} = db
+    const { option: sp } = db
     if (sp.virtualSet) {
       Object.assign(sp.virtualSet, ...option)
       db.option.traversal = true
@@ -650,7 +656,7 @@ export class Flq {
   /**获取上一次查询的总列数 */
   foundRows() {
     const db = this.clone()
-    const {option: sp} = db
+    const { option: sp } = db
     sp.foundRows = 'SQL_CALC_FOUND_ROWS'
     return db
   }
@@ -658,7 +664,7 @@ export class Flq {
   /**获取最后一个插入的id */
   insertId() {
     const db = this.clone()
-    const {option: sp} = db
+    const { option: sp } = db
     sp.insertId = true
     return db
   }
