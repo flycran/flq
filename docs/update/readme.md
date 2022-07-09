@@ -2,6 +2,10 @@
 
 本页可能不会记录所有的版本，详情请前往[npm ![npm type version](https://badgen.net/npm/v/flq)](https://www.npmjs.com/package/flq)
 
+## v0.0.11
+
+重构后处理的触发逻辑，移除`RowPostreat`事件，并完成虚拟get的基本测试
+
 ## v0.0.10
 
 完成预处理的实现，至此已完成模型的基础功能

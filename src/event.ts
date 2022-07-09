@@ -18,7 +18,7 @@ export class AsyncEvent {
     return l.delete(listener)
   }
   async emit(type: string, ...events: any[]) {
-    let date = new Date()
+    // let date = new Date()
     const ls = this.listener.get(type)
     if (!ls) return
     const als: Set<Promise<any>> = new Set()
@@ -26,9 +26,9 @@ export class AsyncEvent {
       const r = e(...events)
       if (r instanceof Promise) als.add(r)
     })
-    console.log(
-      `emit: ${type} It took ${new Date().valueOf() - date.valueOf()}ms`
-    )
+    // console.log(
+    //   `emit: ${type} It took ${new Date().valueOf() - date.valueOf()}ms`
+    // )
   }
 }
 // Array
