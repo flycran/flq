@@ -11,7 +11,9 @@ export const pretreat = {
     const model = flq.model[flq.fieldMap.table[0]]
     for (const key in model) {
       const value = row[key]
-      ps.add(hooks.emit('fieldPretreat', { flq, model: model[key], key, value, row }))
+      ps.add(
+        hooks.emit('fieldPretreat', { flq, model: model[key], key, value, row })
+      )
     }
     await Promise.all(ps)
   },
@@ -19,7 +21,7 @@ export const pretreat = {
 /**预处理数据字段 */
 export const fieldPretreat = {
   async pretreat({ flq, model, key, value, row }: HooksEvent.FieldPetreat) {
-    if(value === undefined) return
+    if (value === undefined) return
     if (!model.pretreat) return
     row[key] = await model.pretreat.call(flq, value, row)
   },
@@ -126,6 +128,13 @@ export const fieldPostreat = {
     if (!model.toArray) return
     if (!value) return (row[key] = [])
     row[key] = value.split(',')
+  },
+  async rename({ flq, model, key, value, row }: HooksEvent.FieldPostreat) {
+    if (!model.rename) return
+    let k = model.rename
+    if (typeof k === 'function') k = await k.call(flq, value, row)
+    row[k] = value
+    delete row[key]
   },
   async postreat({ flq, model, key, value, row }: HooksEvent.FieldPostreat) {
     if (!model.postreat) return

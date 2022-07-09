@@ -184,9 +184,9 @@ export namespace ModelOption {
     /**类型 */
     type: string
     /**默认值 */
-    default: ((this: Flq, value: Record<string, any>) => Promise<any>) | any
+    default: ((this: Flq, row: Data) => Promise<any>) | any
     /**更新值 */
-    update: ((this: Flq, value: Record<string, any>) => Promise<any>) | any
+    update: ((this: Flq, row: Data) => Promise<any>) | any
     /**虚拟字段获取 */
     get: (this: Flq, row: Data) => Promise<any> | any
     /**虚拟字段设置 */
@@ -196,7 +196,7 @@ export namespace ModelOption {
     /**后处理 */
     postreat: (this: Flq, value: any, data: Data) => Promise<any> | any
     /**重命名 */
-    rename: string
+    rename: ((this: Flq, value: any, row: Data) => Promise<string>) | string
     /**转数组 */
     toArray: boolean
     /**子表连接 */
