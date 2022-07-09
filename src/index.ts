@@ -240,15 +240,15 @@ namespace methods {
     )
   }
 
-  const orderOp = new Set(['DESC', 'ACS', '1', '-1'])
+  const orderOp = new Set(['DESC', 'ASC', '1', '-1'])
 
   export function order(option: OrderOption, defOp?: OrderOption.Op): string {
     if (typeof option === 'string') {
-      if (!defOp || defOp === 'ACS' || defOp == '1') return $field(option)
+      if (!defOp || defOp === 'ASC' || defOp == '1') return $field(option)
       return $field(option) + ' DESC'
     }
     if (Array.isArray(option)) {
-      if (!defOp || defOp === 'ACS' || defOp == '1')
+      if (!defOp || defOp === 'ASC' || defOp == '1')
         return option.map((e) => $field(e)).join(', ')
       return option.map((e) => $field(e) + ' DESC').join(', ')
     }
@@ -259,7 +259,7 @@ namespace methods {
         const v = option[key]
         if (orderOp.has(key)) {
           arr.push(order(v, key as OrderOption.Op))
-        } else if (v === 'ACS' || v == '1') arr.push($field(key))
+        } else if (v === 'ASC' || v == '1') arr.push($field(key))
         else arr.push($field(key) + ' DESC')
       }
       return arr.join(', ')
@@ -678,7 +678,7 @@ export class Flq {
   async insert() {
     return await this.send('insert')
   }
-  
+
   /**插入 */
   async update() {
     return await this.send('update')

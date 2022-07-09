@@ -1,7 +1,6 @@
 // 公共类型声明
 import { Flq } from './index'
 import { Connection } from 'mysql2'
-import exp = require('constants')
 
 /**连接配置 */
 export interface ConnectOption {
@@ -121,12 +120,14 @@ export namespace WhereOption {
     | 'not in'
     | 'regexp'
   type Condition =
+    | string
     | [string, any]
-    | [string, Com, any]
     | [string, 'between', any, any]
-  type WhereOp = Partial<{ [Key in Op]: Option }>
-  type WhereObj = Record<string, [Com, any] | any>
-  export type Option = (WhereOp & WhereObj) | Condition | string
+    | [string, Com, any]
+  type WhereObj = {
+    [x: Op | string]: { com: Com; value: any } | WhereObj | Condition[] | any
+  }
+  export type Option = WhereObj | Condition
 }
 export type WhereOption = WhereOption.Option
 /**查询字段 */
@@ -139,7 +140,7 @@ export namespace FieldOption {
 export type FieldOption = FieldOption.Option
 /**排序 */
 export namespace OrderOption {
-  export type Op = 'ACS' | 'DESC' | '1' | '-1'
+  export type Op = 'ASC' | 'DESC' | '1' | '-1'
   type OrderObj = { [x: Op | string]: Option | string }
   type OrderArr = string[]
   export type Option = string | OrderObj | OrderArr
