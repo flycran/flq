@@ -1,5 +1,6 @@
 // sql方法
-import { escape, field } from './index'
+import { escape, field, Sql, methods } from './index'
+import { WhereOption, Dbany } from './types'
 
 const presetFunctionMap: Record<string, Function> = {
   f: field,
@@ -10,16 +11,53 @@ const presetFunctionMap: Record<string, Function> = {
  * @param model 模型字符串 f代表字段,v代表值
  * @returns
  */
-function presetFunction(name: string, model?: string): (...ages: any[]) => string {
+function presetFunction(name: string, model?: string): (...ages: any[]) => Sql {
   return (...ages: any[]) => {
     const ar = []
-    if (!model) return name + '()'
+    if (!model) return new Sql(name + '()')
     for (let i = 0; i < ages.length; i++) {
       ar.push(presetFunctionMap[model[i]](ages[i]))
     }
-    return `${name}(${ar.join(', ')})`
+    return new Sql(`${name}(${ar.join(', ')})`)
   }
 }
+/**括号 */
+export function brackets(
+  option: WhereOption,
+  operator: WhereOption.Operator = 'AND'
+): Sql {
+  return new Sql(`(${methods.where(option, operator)})`)
+}
+
+/**操作符 */
+export function compare(
+  field: string | Sql,
+  comparator: 'BETWEEN',
+  value0: Sql | Dbany,
+  value1: Sql | Dbany
+): Sql
+export function compare(
+  field: string | Sql,
+  comparator: WhereOption.Comparator,
+  value: Sql | Dbany
+): Sql
+export function compare(
+  fie: string | Sql,
+  com: WhereOption.Comparator,
+  v0: Sql | Dbany,
+  v1?: Sql | Dbany
+): Sql {
+  if (com === '!=') com = '<>'
+  return new Sql(
+    `${field(fie)} ${com.toUpperCase()} ${escape(v0)}${
+      com === 'BETWEEN' ? ` AND ${escape(v1)}` : ''
+    }`
+  )
+}
+
+// export function avg(fie: Sql | string) {
+//   return `AVG(${field(fie)})`
+// }
 
 /**函数表 */
 /**

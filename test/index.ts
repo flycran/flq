@@ -9,11 +9,6 @@ const flq = new Flq(
   },
   {
     student: {
-      name: {
-        async postreat(value, data) {
-          return '名字:' + value
-        },
-      },
       association: {
         toArray: true,
       },
@@ -40,7 +35,21 @@ flq.test(async () => {
   const db = flq
     .from('student')
     .field('name', 'chinese', 'math', 'english')
-    .virtualGet('avg')
+    .where({
+      // chinese: {
+      //   com: '>',
+      //   val: 60
+      // },
+      // math: {
+      //   com: '>',
+      //   val: 60,
+      // },
+      // english: {
+      //   com: '>',
+      //   val: 60,
+      // },
+      
+    })
   const result = await db.find()
   console.log(db.sql)
   console.log(result)

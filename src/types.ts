@@ -1,5 +1,5 @@
 // 公共类型声明
-import { Flq } from './index'
+import { Flq, Sql } from './index'
 import { Connection } from 'mysql2'
 
 /**连接配置 */
@@ -95,14 +95,18 @@ export interface FlqOption {
   foundRows?: string
 }
 
+export type Dbany = string | number | boolean | Date
+
 /**基本索引对象 */
 export type Data = Record<string, any>
 /**表名 */
 export type FromOption = string
 /**查询条件 */
 export namespace WhereOption {
-  export type Op = 'AND' | 'OR'
-  export type Com =
+  export type Operator = 'AND' | 'OR'
+  type NoVal = 'IS NULL' | 'IS NOT NULL'
+  type ArrVal = 'IN' | 'NOT IN'
+  export type Comparator =
     | '>'
     | '<'
     | '='
@@ -110,22 +114,21 @@ export namespace WhereOption {
     | '<='
     | '>='
     | '<>'
-    | 'is null'
-    | 'is not null'
-    | 'between'
-    | 'like'
-    | 'in'
-    | 'not in'
-    | 'regexp'
-  type Condition =
-    | string
-    | [string, any]
-    | [string, 'between', any, any]
-    | [string, Com, any]
+    | 'BETWEEN'
+    | 'LIKE'
+    | 'REGEXP'
+    | NoVal
+    | ArrVal
   type WhereObj = {
-    [x: Op | string]: { com: Com; value: any } | WhereObj | Condition[] | any
+    [x: Operator | string]:
+      | { com: NoVal }
+      | { com: ArrVal; val: Dbany[] }
+      | { com: 'BETWEEN'; val: [Dbany| Sql, Dbany| Sql] }
+      | { com: Comparator; val?: Dbany | Sql | Dbany[] }
+      | Option
+      | Dbany
   }
-  export type Option = WhereObj | Condition
+  export type Option = WhereObj | Sql | Sql[]
 }
 export type WhereOption = WhereOption.Option
 /**查询字段 */

@@ -332,9 +332,9 @@ console.log('总列数:', db.total)
 
 该方法会忽略分页、分组、排序等无意义的配置项。
 
-## insert
+## add
 
-`insert(): Promise<Record<string, any>>`
+`add(): Promise<Record<string, any>>`
 
 执行插入语句[（template: insert）](https://gitee.com/flycran/flq/blob/master/src/templates.ts)
 
@@ -343,3 +343,9 @@ console.log('总列数:', db.total)
 `count(): Promise<number>`
 
 查询复合条件的数据条数[（template: count）](https://gitee.com/flycran/flq/blob/master/src/templates.ts)
+
+## del
+
+`del(): Promise<Record<string, any>>`
+
+指向删除语句[（template: delete）](https://gitee.com/flycran/flq/blob/master/src/templates.ts)
