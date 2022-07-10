@@ -8,17 +8,37 @@
 
 在获取虚拟字段时调用
 
+- **this**
+
+  this指向`flq`实例
+
+- **row**
+
+  查询后返回的所有字段
+
 ## set
 
 `set: (this: Flq, value: any, row: Data) => Promise<void>`
 
 虚拟字段设置回调
 
-在设置虚拟字段时调用
+在设置虚拟字段时调用，该函数不接受返回值，如果需要对真实字段进行操作请使用[pretreat](#pretreat)
+
+- **this**
+
+  this指向`flq`实例
+
+- **value**
+
+  虚拟字段设置时传入的值
+
+- **row**
+
+  设置时传入的所有真实字段
 
 ## default
 
-`default: ((this: Flq, value: Record<string, any>) => Promise<any>) | any`
+`default: ((this: Flq, value: Record<string, any>) => Promise<any> | any) | any`
 
 插入时默认值，对虚拟字段无效
 
@@ -34,9 +54,18 @@
 
 ## update
 
-`update: ((this: Flq, value: Record<string, any>) => Promise<any>) | any`
+`update: ((this: Flq, value: Record<string, any>) => Promise<any> | any) | any`
 
-更新时默认值，对虚拟字段无效
+更新时默认值，对虚拟字段无效。该方法在数据插入时也会触发，如果想阻止此行为可以手动判断
+
+```js
+{
+  update() {
+    if(this.type === 'insert') return
+    //...
+  }
+}
+```
 
 当传入回调函数时
 

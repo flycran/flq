@@ -74,9 +74,9 @@ export interface FlqOption {
   where?: string
   // ！改为对象形式
   /**设置 */
-  set?: Record<string, any>
+  set: Record<string, any>
   /**插入 */
-  value?: Record<string, any>
+  value: Record<string, any>
   /**排序 */
   order?: string
   /**分组 */
@@ -119,24 +119,33 @@ export namespace WhereOption {
     | 'REGEXP'
     | NoVal
     | ArrVal
-  type WhereObj = {
-    [x: Operator | string]:
-      | { com: NoVal }
-      | { com: ArrVal; val: Dbany[] }
-      | { com: 'BETWEEN'; val: [Dbany| Sql, Dbany| Sql] }
-      | { com: Comparator; val?: Dbany | Sql | Dbany[] }
-      | Option
-      | Dbany
-  }
-  export type Option = WhereObj | Sql | Sql[]
+
+  type Ops =
+    | { com: NoVal }
+    | { com: ArrVal; val: Dbany[] }
+    | { com: 'BETWEEN'; val: [Dbany | Sql, Dbany | Sql] }
+    | { com: Comparator; val?: Dbany | Sql | Dbany[] }
+
+  type WhereObj =
+    | {
+        [K in Operator | Comparator]?: Option
+      }
+    | {
+        [x: string]: Sql | Ops | Dbany
+      }
+  export type Option = WhereObj | Option[] | Sql | Sql[]
 }
 export type WhereOption = WhereOption.Option
 /**查询字段 */
 export namespace FieldOption {
   export type PolyMet = 'AVG' | 'COUNT' | 'MAX' | 'MIN' | 'SUM'
-  type FieldObj = { [x: PolyMet | string]: Option | string | [string, string] }
+  type FieldObj =
+    | {
+        [K in PolyMet]?: Option
+      }
+    | { [x: string]: string | [string, string] }
   type FieldArr = (string | FieldObj)[]
-  export type Option = string | FieldObj | FieldArr
+  export type Option = Sql | string | FieldObj | FieldArr
 }
 export type FieldOption = FieldOption.Option
 /**排序 */
@@ -185,9 +194,9 @@ export namespace ModelOption {
     /**类型 */
     type: string
     /**默认值 */
-    default: ((this: Flq, row: Data) => Promise<any>) | any
+    default: ((this: Flq, row: Data) => Promise<any> | any) | any
     /**更新值 */
-    update: ((this: Flq, row: Data) => Promise<any>) | any
+    update: ((this: Flq, row: Data) => Promise<any> | any) | any
     /**虚拟字段获取 */
     get: (this: Flq, row: Data) => Promise<any> | any
     /**虚拟字段设置 */

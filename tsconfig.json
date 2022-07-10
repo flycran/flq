@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     /* 屏蔽索引报错 */
-    "suppressImplicitAnyIndexErrors": false,
+    "suppressImplicitAnyIndexErrors": true,
     /* 为发出的JavaScript设置JavaScript语言版本，并包括兼容的库声明 */
     "target": "ES2020",
     /*  */

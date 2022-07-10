@@ -28,11 +28,20 @@ export const fieldPretreat = {
   async default({ flq, model, key, value, row }: HooksEvent.FieldPetreat) {
     if (value !== undefined) return
     if (model.default === undefined) return
-    if (!flq.sql.startsWith('INSERT')) return
+    if (flq.type !== 'insert') return
     if (typeof model.default === 'function') {
       row[key] = await model.default.call(flq, value, row)
     } else {
-      row[key] = await model.default
+      row[key] = model.default
+    }
+  },
+  async update({ flq, model, key, value, row }: HooksEvent.FieldPetreat) {
+    if (value !== undefined) return
+    if (model.update === undefined) return
+    if (typeof model.update === 'function') {
+      row[key] = await model.update.call(flq, value, row)
+    } else {
+      row[key] = model.update
     }
   },
   async virtualSet({ flq, model, key, row }: HooksEvent.FieldPetreat) {
@@ -123,15 +132,16 @@ export const fieldPostreat = {
     if (!virtualGet.includes(key)) return
     row[key] = await model.get.call(flq, row)
   },
-  async subField({ row, flq }: HooksEvent.FieldPostreat) {
-    if (!flq.option.subField) return
-    const {
-      option: { subField },
-      model,
-    } = flq
-  },
+  // async subField({ row, flq }: HooksEvent.FieldPostreat) {
+  //   if (!flq.option.subField) return
+  //   const {
+  //     option: { subField },
+  //     model,
+  //   } = flq
+  // },
   async rename({ flq, model, key, value, row }: HooksEvent.FieldPostreat) {
     if (!model.rename) return
+    if (value === undefined) return
     let k = model.rename
     if (typeof k === 'function') k = await k.call(flq, key, value, row)
     row[k] = value
@@ -139,6 +149,7 @@ export const fieldPostreat = {
   },
   async postreat({ flq, model, key, value, row }: HooksEvent.FieldPostreat) {
     if (!model.postreat) return
+    if (value === undefined) return
     row[key] = await model.postreat.call(flq, value, row)
   },
 }

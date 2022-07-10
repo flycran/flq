@@ -349,3 +349,9 @@ console.log('总列数:', db.total)
 `del(): Promise<Record<string, any>>`
 
 指向删除语句[（template: delete）](https://gitee.com/flycran/flq/blob/master/src/templates.ts)
+
+## type
+
+`type: 'select' | 'insert' | 'update' | 'delect'`
+
+sql语句的类型，在调用查询时定义，可用的值为: `select`、`insert`、`update`、`delete`

@@ -70,6 +70,8 @@ function deepClone<T>(target: T): T {
 function pf(n: string) {
   if (n.includes('`'))
     throw new FlqError(`非法的字段名"${n}"，字段名不允许包含反引号"\`"`)
+  if (n.includes("''"))
+    throw new FlqError(`非法的字段名"${n}"，字段名不允许包含连续单引号"''"`)
   return '`' + n + '`'
 }
 
@@ -156,6 +158,7 @@ export namespace methods {
     option: FieldOption,
     met?: FieldOption.PolyMet
   ): string {
+    if (option instanceof Sql) return option.sql
     if (typeof option === 'string')
       return fieldM.call(this, option, undefined, met)
     if (Array.isArray(option)) {
@@ -168,10 +171,8 @@ export namespace methods {
         if (polyMet.has(key)) {
           r.push(field.call(this, e, key as FieldOption.PolyMet))
         } else if (Array.isArray(e)) {
-          //@ts-ignore
           r.push(fieldM.call(this, key, e[1], e[0]))
         } else {
-          //@ts-ignore
           r.push(fieldM.call(this, key, e, met))
         }
       }
@@ -192,11 +193,8 @@ export namespace methods {
       const ws = []
       for (let i = 0; i < option.length; i++) {
         const value = option[i]
-        if (!(value instanceof Sql))
-          throw new FlqError(
-            `methods.where: 不受支持的参数类型:${JSON.stringify(option)}`
-          )
-        ws.push(value.sql)
+        if (value instanceof Sql) ws.push(value.sql)
+        else ws.push(where(value, operator, comparator))
       }
       return ws.join(` ${operator} `)
     }
@@ -205,10 +203,6 @@ export namespace methods {
       for (const key in option) {
         let val: any = option[key]
         if (val === undefined) continue
-        if (val instanceof Sql) {
-          ws.push(val.sql)
-          continue
-        }
         let com = comparator
         if (typeof val === 'object') {
           if ('com' in val) com = val.com as WhereOption.Comparator
@@ -309,7 +303,7 @@ export namespace methods {
       for (const k in option) {
         const v = option[k]
         ks.push($field(k))
-        vs.push($field(escape(v)))
+        vs.push(escape(v))
       }
       return `(${ks.join(', ')}) VALUES (${vs.join(', ')})`
     }
@@ -337,15 +331,11 @@ export namespace methods {
   }
 }
 
-async function format(e: string, v: any, flq: Flq) {
+function format(e: string, v: any, flq: Flq) {
   switch (e) {
     case 'value':
-      if (!v) throw new FlqError('Flq.format:缺少必选配置value')
-      await hooks.emit('pretreat', { flq, row: v })
       return methods.value(v)
     case 'set':
-      if (!v) throw new FlqError('Flq.format:缺少必选配置set')
-      await hooks.emit('pretreat', { flq, row: v })
       return methods.set(v)
     case 'from':
       if (!v) throw new FlqError('Flq.format:缺少必选配置from')
@@ -386,7 +376,7 @@ export function sql(sql: string) {
 
 /**插槽 */
 export function slot(name: string) {
-  return new Sql(`''${name}''}`)
+  return new Sql(`''${name}''`)
 }
 
 /**Flq */
@@ -404,7 +394,10 @@ export class Flq {
   }
 
   /**sql参数 */
-  option: FlqOption = {}
+  option: FlqOption = {
+    set: {},
+    value: {},
+  }
   /**字段映射 */
   fieldMap = {
     table: [] as string[],
@@ -420,7 +413,8 @@ export class Flq {
   pool?: Pool
   /**最后操作的条数 */
   total?: number
-
+  /**查询类型 */
+  type?: 'select' | 'insert' | 'update' | 'delect'
   /**测试 */
   async test(callBack: (this: Flq) => Promise<any>) {
     await callBack.call(this)
@@ -470,7 +464,7 @@ export class Flq {
    * @param template 格式方法
    * @returns sql语句
    */
-  async format(template: string): Promise<string> {
+  format(template: string): string {
     //@ts-ignore
     let rsql = templates[template]
     let sr = []
@@ -482,7 +476,7 @@ export class Flq {
       const e = rsql.indexOf(']', s + 1)
       const m = rsql.slice(s + 2, e)
       // @ts-ignore
-      const v = await format(m, this.option[m], this)
+      const v = format(m, this.option[m], this)
       if (v) {
         sr.push(' ' + v)
       }
@@ -500,6 +494,10 @@ export class Flq {
    * @returns 数据
    */
   async send(template: string): Promise<any> {
+    if (this.type === 'insert')
+      await hooks.emit('pretreat', { flq: this, row: this.option.value })
+    if (this.type === 'update')
+      await hooks.emit('pretreat', { flq: this, row: this.option.set })
     const { option } = this
     //@ts-ignore
     const ctn: Connection = await this.getConnect()
@@ -559,10 +557,14 @@ export class Flq {
   }
 
   /**设置条件 */
-  where(option: WhereOption, operator: WhereOption.Operator = 'AND') {
+  where(
+    option: WhereOption,
+    operator: WhereOption.Operator = 'AND',
+    comparator: WhereOption.Comparator = '='
+  ) {
     const db = this.clone()
     const { option: sp } = db
-    const sql = methods.where(option, operator)
+    const sql = methods.where(option, operator, comparator)
     if (sp.where) {
       sp.where += ` ${operator} ` + sql
     } else {
@@ -573,11 +575,16 @@ export class Flq {
 
   /**插入 */
   insert(option: Record<string, any>) {
-    if (!this.option.where) return
+    if (!this.option.where) return this
+    const db = this.clone()
     for (const key in option) {
       const value = option[key]
-      this.option.where = this.option.where.replace(`''${key}''`, escape(value))
+      db.option.where = this.option.where.replace(
+        new RegExp(`''${key}''`, 'g'),
+        escape(value)
+      )
     }
+    return db
   }
 
   /**插入数据 */
@@ -706,33 +713,39 @@ export class Flq {
 
   /**查询 */
   async find(): Promise<Record<string, any>[]> {
+    this.type = 'select'
     return await this.send('select')
   }
 
   /**查询第一个 */
   async first(): Promise<Record<string, any>> {
+    this.type = 'select'
     const data = await this.send('select')
     return data[0]
   }
 
   /**插入 */
   async add() {
+    this.type = 'insert'
     return await this.send('insert')
   }
 
   /**插入 */
   async update() {
+    this.type = 'update'
     return await this.send('update')
   }
 
   /**计数 */
   async count() {
+    this.type = 'select'
     const data = await this.send('count')
     return Object.values(data[0])[0]
   }
 
   /**删除 */
   async del() {
+    this.type = 'delect'
     return await this.send('delete')
   }
 }

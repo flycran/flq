@@ -2,6 +2,8 @@
 
 ## 准备
 
+在阅读下文前，确保你已经阅读了本文档中的[入门](./introduction.html)
+
 为了方便演示后续的操作，我们先准备一个用于测试的表格
 
 它看起来应该像这样：
@@ -61,6 +63,41 @@ console.log(result)
 ]
 ```
 
+## 查询部分字段
+
+#### 演示
+
+```js
+flq.test(async () => {
+  const db = flq
+    .from('student')
+    .where({ gender: '女' })
+    // field 查询的字段
+    .field('name', { gender: 'sex' })
+  const result = await db.find()
+  console.log(db.sql)
+  console.log(result)
+})
+```
+
+#### 结果
+
+```sh
+SELECT `name`, `gender` as 'sex' FROM `student` WHERE `gender` = '女'
+[
+  { name: '李四', sex: '女' },
+  { name: '王五', sex: '女' },
+  { name: '郑八', sex: '女' },
+  { name: '周九', sex: '女' }
+]
+```
+
+:::tip
+
+前往[API 文档](/api/#field)查看`field`的详细用法
+
+:::
+
 ## 条件查询
 
 #### 演示
@@ -109,41 +146,6 @@ SELECT * FROM `student` WHERE `gender` = '女'
 :::tip
 
 前往[API 文档](/api/#where)查看`where`的详细用法
-
-:::
-
-## 查询部分字段
-
-#### 演示
-
-```js
-flq.test(async () => {
-  const db = flq
-    .from('student')
-    .where({ gender: '女' })
-    // field 查询的字段
-    .field('name', { gender: 'sex' })
-  const result = await db.find()
-  console.log(db.sql)
-  console.log(result)
-})
-```
-
-#### 结果
-
-```sh
-SELECT `name`, `gender` as 'sex' FROM `student` WHERE `gender` = '女'
-[
-  { name: '李四', sex: '女' },
-  { name: '王五', sex: '女' },
-  { name: '郑八', sex: '女' },
-  { name: '周九', sex: '女' }
-]
-```
-
-:::tip
-
-前往[API 文档](/api/#field)查看`field`的详细用法
 
 :::
 
@@ -380,48 +382,32 @@ flq.test(async () => {
 SELECT `name`, `chinese`, `math`, `english` FROM `student`
 [
   {
-    name: '名字:张三',
+    name: '张三',
     chinese: 86,
     math: 78,
     english: 65,
     avg: 76.33333333333333
   },
-  { name: '名字:李四', chinese: 56, math: 56, english: 23, avg: 45 },
+  { name: '李四', chinese: 56, math: 56, english: 23, avg: 45 },
   {
-    name: '名字:王五',
+    name: '王五',
     chinese: 89,
     math: 41,
     english: 91,
     avg: 73.66666666666667
   },
-  { name: '名字:赵六', chinese: 86, math: 97, english: 78, avg: 87 },
+  { name: '赵六', chinese: 86, math: 97, english: 78, avg: 87 },
   {
-    name: '名字:钱七',
+    name: '钱七',
     chinese: 91,
     math: 100,
     english: 86,
     avg: 92.33333333333333
   },
-  {
-    name: '名字:郑八',
-    chinese: 86,
-    math: 63,
-    english: 75,
-    avg: 74.66666666666667
-  },
-  {
-    name: '名字:周九',
-    chinese: 65,
-    math: 57,
-    english: 36,
-    avg: 52.666666666666664
-  },
-  {
-    name: '名字:孙十',
-    chinese: 58,
-    math: 63,
-    english: 75,
-    avg: 65.33333333333333
-  }
+  //...省略
 ]
 ```
+
+:::tip
+虚拟字段属于模型的部分，有关更多模型的介绍请前往[`模型`](/guide/model.html)
+:::

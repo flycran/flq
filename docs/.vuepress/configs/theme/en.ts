@@ -1,4 +1,4 @@
-import {DefaultThemeOptions} from '@vuepress/theme-default'
+import { DefaultThemeOptions } from '@vuepress/theme-default'
 
 export const en: DefaultThemeOptions = {
   repoLabel: 'View source code',
@@ -13,18 +13,18 @@ export const en: DefaultThemeOptions = {
   notFound: ['This page was captured by aliens'],
   backToHome: 'Return to home',
   navbar: [
-    {text: 'guide', link: '/en/guide/'},
-    {text: 'API', link: '/en/api/'},
-    {text: 'Presentation form', children: ['/table/student.md']},
-    {text: 'update log', link: '/update'},
-    {text: 'support', link: '/en/support'},
+    { text: 'guide', link: '/en/guide/' },
+    { text: 'API', link: '/en/api/' },
+    {
+      text: 'Presentation form',
+      children: ['/table/student.md', '/table/class.md'],
+    },
+    { text: 'update log', link: '/en/update/' },
+    { text: 'support', link: '/en/support/' },
   ],
   sidebar: {
-    '/guide/': ['readme.md', 'introduction.md', 'query.md'],
+    '/guide/': ['readme.md', 'introduction.md', 'query.md', 'model.md'],
     '/api/': ['readme.md', 'model.md'],
-    '/table/': [{
-      text: 'Presentation form',
-      children: ['student.md']
-    }],
+    '/table/': ['student.md', 'class.md'],
   },
 }

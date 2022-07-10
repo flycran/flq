@@ -18,7 +18,14 @@
       "group": "test",
       "problemMatcher": [],
       "label": "npm: test",
-      "detail": "node test",
+      "detail": "node test"
+    },
+    {
+      "type": "npm",
+      "script": "dev",
+      "problemMatcher": [],
+      "label": "npm: dev",
+      "detail": "vuepress dev docs"
     }
   ]
 }
