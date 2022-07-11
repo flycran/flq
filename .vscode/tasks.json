@@ -26,6 +26,14 @@
       "problemMatcher": [],
       "label": "npm: dev",
       "detail": "vuepress dev docs"
+    },
+    {
+      "type": "npm",
+      "script": "build",
+      "group": "build",
+      "problemMatcher": [],
+      "label": "npm: build",
+      "detail": "vuepress build docs"
     }
   ]
 }

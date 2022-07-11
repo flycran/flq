@@ -2,7 +2,7 @@
 home: true
 heroImage: /hero.png
 heroText: FLQ
-tagline: Node与数据库交互的应用层解决方案（未完成，谨慎使用）
+tagline: Node与数据库交互的应用层解决方案（测试版本）
 actions: 
   - text: 快速上手  ▶
     link: /guide/
