@@ -1,6 +1,7 @@
 node_modules
 .npm
 .vscode-test
+.VSCodeCounter
 docs
 test
 tsconfig.json

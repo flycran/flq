@@ -2,6 +2,7 @@ node_modules
 .npm
 lib
 .vscode-test
+.VSCodeCounter
 docs/.vuepress/dist
 docs/.vuepress/.cache
 docs/.vuepress/.temp
