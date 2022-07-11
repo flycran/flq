@@ -25,9 +25,9 @@ import {
 import * as templates from './templates'
 
 /**安全处理 */
-export function escape(value: any): string {
-  if (value instanceof Sql) return value.sql
-  return $escape(value)
+export function escape(value: any): Sql {
+  if (value instanceof Sql) return value
+  return new Sql($escape(value))
 }
 /**格式化需要的正则表达式 */
 const RGE = /^.+\(.*?\)$/
@@ -76,17 +76,17 @@ function pf(n: string) {
 }
 
 /**预处理字段名 */
-export function field(field: Sql | string): string
-export function field(from: string, field: string): string
-export function field(p1: any, p2?: any): string {
-  if (p1 instanceof Sql) return p1.sql
+export function field(field: Sql | string): Sql
+export function field(from: string, field: string): Sql
+export function field(p1: any, p2?: any): Sql {
+  if (p1 instanceof Sql) return p1
   if (p2) {
-    return pf(p1) + '.' + pf(p2)
+    return new Sql(pf(p1) + '.' + pf(p2))
   }
   const fs = p1.split('.')
   if (fs.length > 1) return field(fs[0], fs[1])
   if (RGE.test(p1)) return p1
-  return pf(p1)
+  return new Sql(pf(p1))
 }
 
 /**防重名 */
@@ -111,8 +111,8 @@ export namespace methods {
     'REGEXP',
   ])
 
-  const noVal = new Set(['IS NULL', 'IS NOT NULL'])
-  const arrVal = new Set(['IN', 'NOT IN'])
+  export const noVal = new Set(['IS NULL', 'IS NOT NULL'])
+  export const arrVal = new Set(['IN', 'NOT IN'])
 
   /**处理字段,并建立字段映射 */
   function fieldM(this: Flq, field: string, as?: string, met?: string): string {
@@ -151,7 +151,7 @@ export namespace methods {
       .join(', ')
   }
 
-  const polyMet = new Set(['AVG', 'COUNT', 'MAX', 'MIN', 'SUM'])
+  export const polyMet = new Set(['AVG', 'COUNT', 'MAX', 'MIN', 'SUM'])
 
   export function field(
     this: Flq,
@@ -185,7 +185,7 @@ export namespace methods {
 
   export function where(
     option: WhereOption,
-    operator: WhereOption.Operator = 'AND',
+    connector: WhereOption.Connector = 'AND',
     comparator: WhereOption.Comparator = '='
   ): string {
     if (option instanceof Sql) return option.sql
@@ -194,9 +194,9 @@ export namespace methods {
       for (let i = 0; i < option.length; i++) {
         const value = option[i]
         if (value instanceof Sql) ws.push(value.sql)
-        else ws.push(where(value, operator, comparator))
+        else ws.push(where(value, connector, comparator))
       }
-      return ws.join(` ${operator} `)
+      return ws.join(` ${connector} `)
     }
     if (typeof option === 'object') {
       const ws = []
@@ -217,7 +217,7 @@ export namespace methods {
         // 键名是比较运算符
         if (compOpers.has(key)) {
           //@ts-ignore
-          ws.push(`(${where(val, operator, key)})`)
+          ws.push(`(${where(val, connector, key)})`)
           continue
         }
         // 键名是字段名
@@ -225,6 +225,7 @@ export namespace methods {
         // 操作符不需要传入
         if (noVal.has(com)) {
           ws.push(`${pk} ${com}`)
+          continue
         }
         // 操作符要求传入数组
         if (arrVal.has(com)) {
@@ -233,11 +234,21 @@ export namespace methods {
               `methods.where: 不受支持的参数类型:${JSON.stringify(option)}`
             )
           ws.push(`${pk} ${com} (${val.map((e) => escape(e)).join(', ')})`)
+          continue
+        }
+        // 操作符是BETWEEN
+        if (com === 'BETWEEN') {
+          if (!Array.isArray(val))
+            throw new FlqError(
+              `methods.where: 不受支持的参数类型:${JSON.stringify(option)}`
+            )
+          ws.push(`${pk} ${com} ${escape(val[0])} AND ${escape(val[1])}`)
+          continue
         }
         // 操作符要求传入任意值
         ws.push(`${pk} ${com} ${escape(val)}`)
       }
-      return ws.join(` ${operator} `)
+      return ws.join(` ${connector} `)
     }
     throw new FlqError(
       `methods.where: 不受支持的参数类型:${JSON.stringify(option)}`
@@ -248,7 +259,7 @@ export namespace methods {
 
   export function order(option: OrderOption, defOp?: OrderOption.Op): string {
     if (typeof option === 'string') {
-      if (!defOp || defOp === 'ASC' || defOp == '1') return $field(option)
+      if (!defOp || defOp === 'ASC' || defOp == '1') return $field(option).sql
       return $field(option) + ' DESC'
     }
     if (Array.isArray(option)) {
@@ -293,7 +304,7 @@ export namespace methods {
   }
 
   export function group(option: GroupOption): string {
-    return $field(option)
+    return $field(option).sql
   }
 
   export function value(option: ValueOption): string {
@@ -415,6 +426,8 @@ export class Flq {
   total?: number
   /**查询类型 */
   type?: 'select' | 'insert' | 'update' | 'delect'
+  /**插槽 */
+  slot?: Record<string, any>
   /**测试 */
   async test(callBack: (this: Flq) => Promise<any>) {
     await callBack.call(this)
@@ -465,6 +478,16 @@ export class Flq {
    * @returns sql语句
    */
   format(template: string): string {
+    const { slot, option } = this
+    if (slot && option.where) {
+      for (const key in slot) {
+        const value = slot[key]
+        option.where = option.where.replace(
+          new RegExp(`''${key}''`, 'g'),
+          escape(value).sql
+        )
+      }
+    }
     //@ts-ignore
     let rsql = templates[template]
     let sr = []
@@ -488,6 +511,19 @@ export class Flq {
     return sql
   }
 
+  // /**插入 */
+  // insert() {
+  //   if (!this.option.where) return this
+  //   const db = this.clone()
+  //   for (const key in option) {
+  //     const value = option[key]
+  //     db.option.where = this.option.where.replace(
+  //       new RegExp(`''${key}''`, 'g'),
+  //       escape(value).sql
+  //     )
+  //   }
+  //   return db
+  // }
   /**
    * 发送sql语句, 并根据模型处理数据
    * @param template 格式方法
@@ -559,30 +595,16 @@ export class Flq {
   /**设置条件 */
   where(
     option: WhereOption,
-    operator: WhereOption.Operator = 'AND',
+    connector: WhereOption.Connector = 'AND',
     comparator: WhereOption.Comparator = '='
   ) {
     const db = this.clone()
     const { option: sp } = db
-    const sql = methods.where(option, operator, comparator)
+    const sql = methods.where(option, connector, comparator)
     if (sp.where) {
-      sp.where += ` ${operator} ` + sql
+      sp.where += ` ${connector} ` + sql
     } else {
       sp.where = sql
-    }
-    return db
-  }
-
-  /**插入 */
-  insert(option: Record<string, any>) {
-    if (!this.option.where) return this
-    const db = this.clone()
-    for (const key in option) {
-      const value = option[key]
-      db.option.where = this.option.where.replace(
-        new RegExp(`''${key}''`, 'g'),
-        escape(value)
-      )
     }
     return db
   }
@@ -712,39 +734,44 @@ export class Flq {
   }
 
   /**查询 */
-  async find(): Promise<Record<string, any>[]> {
+  async find(slot?: Record<string, any>): Promise<Record<string, any>[]> {
+    this.slot = slot
     this.type = 'select'
     return await this.send('select')
   }
 
   /**查询第一个 */
-  async first(): Promise<Record<string, any>> {
+  async first(slot?: Record<string, any>): Promise<Record<string, any>> {
+    this.slot = slot
     this.type = 'select'
     const data = await this.send('select')
     return data[0]
   }
 
   /**插入 */
-  async add() {
+  async add(slot?: Record<string, any>) {
+    this.slot = slot
     this.type = 'insert'
     return await this.send('insert')
   }
 
   /**插入 */
-  async update() {
+  async update(slot?: Record<string, any>) {
+    this.slot = slot
     this.type = 'update'
     return await this.send('update')
   }
 
   /**计数 */
-  async count() {
+  async count(slot?: Record<string, any>) {
+    this.slot = slot
     this.type = 'select'
     const data = await this.send('count')
     return Object.values(data[0])[0]
   }
 
   /**删除 */
-  async del() {
+  async del(slot?: Record<string, any>) {
     this.type = 'delect'
     return await this.send('delete')
   }

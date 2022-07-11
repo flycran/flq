@@ -34,7 +34,7 @@ npm i flq
 `pool`用于启用连接池，强烈推荐开启连接池。因为 FLQ 在内部大量使用并行查询，连接池可以极大的发挥并行查询的效率
 :::
 
-```js
+```ts
 const { Flq } = require('flq')
 const flq = new Flq({
   pool: true, // 使用连接池 !推荐使用
@@ -48,7 +48,7 @@ const flq = new Flq({
 
 首先使用`flq.from()`配置表名，再使用`find()`发起查询
 
-```js
+```ts
 const db = flq.from('student')
 db.find().then((e) => console.log(e))
 ```
@@ -65,7 +65,7 @@ db.find().then((e) => console.log(e))
 `test`方法将异步执行，并且在回调完成后立即关闭`mysql`连接
 :::
 
-```js
+```ts
 const { Flq } = require('flq')
 
 const flq = new Flq({

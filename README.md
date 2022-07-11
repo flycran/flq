@@ -10,7 +10,7 @@
 
 ## 基本查询
 
-```js
+```ts
 const { Flq, hooks } = require('flq')
 
 const flq = new Flq({
@@ -29,7 +29,7 @@ flq.test(async () => {
 
 ## 分组聚合
 
-```js
+```ts
 flq.test(async () => {
   const db = flq
     .from('student')
@@ -49,7 +49,7 @@ flq.test(async () => {
 
 ## 总列数
 
-```js
+```ts
 flq.test(async () => {
   const db = flq
     .from('student')

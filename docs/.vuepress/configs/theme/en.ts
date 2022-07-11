@@ -23,7 +23,13 @@ export const en: DefaultThemeOptions = {
     { text: 'support', link: '/en/support/' },
   ],
   sidebar: {
-    '/guide/': ['readme.md', 'introduction.md', 'query.md', 'model.md'],
+    '/guide/': [
+      'readme.md',
+      'introduction.md',
+      'query.md',
+      'condition.md',
+      'model.md',
+    ],
     '/api/': ['readme.md', 'model.md'],
     '/table/': ['student.md', 'class.md'],
   },

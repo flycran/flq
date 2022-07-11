@@ -29,7 +29,7 @@ footer: 湘ICP备2022005467号
 
 > **!** 复用公共配置项
 
-```js
+```ts
 const dbTest = db.from('test').where({ deleteAt: 1 })
 const my = await dbTest.where({ uid: 1 }).find()
 const all = await dbTest.limit({ size: 10, page: 1 }).find()

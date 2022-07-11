@@ -2,8 +2,6 @@
 
 ## 准备
 
-在阅读下文前，确保你已经阅读了本文档中的[入门](./introduction.html)
-
 为了方便演示后续的操作，我们先准备一个用于测试的表格
 
 它看起来应该像这样：
@@ -21,11 +19,13 @@
 
 你可以在[演示表格](/table/student.html)处找到此表的 sql 语句。
 
+在阅读下文前，确保你已经阅读了本文档中的[入门](./introduction.html)
+
 ## 基础查询
 
 #### 演示
 
-```js
+```ts
 // from 要查询的表格
 const db = flq.from('student')
 // find 执行查询
@@ -67,7 +67,7 @@ console.log(result)
 
 #### 演示
 
-```js
+```ts
 flq.test(async () => {
   const db = flq
     .from('student')
@@ -102,7 +102,7 @@ SELECT `name`, `gender` as 'sex' FROM `student` WHERE `gender` = '女'
 
 #### 演示
 
-```js
+```ts
 flq.test(async () => {
   // where 查询条件
   const db = flq.from('student').where({ gender: '女' })
@@ -149,11 +149,13 @@ SELECT * FROM `student` WHERE `gender` = '女'
 
 :::
 
+> 由于查询条件可能会非常复杂，FLQ为查询条件提供了更复杂的语法，详情查阅[条件](/guide/condition/)
+
 ## 聚合
 
 #### 演示
 
-```js
+```ts
 flq.test(async () => {
   // 在field中使用AVG聚合方法
   const db = flq.from('student').field({
@@ -182,7 +184,7 @@ SELECT AVG(`chinese`) as 'chinese', AVG(`math`) as 'math', AVG(`english`) as 'en
 
 #### 演示
 
-```js
+```ts
 const db = flq
   .from('student')
   .field(
@@ -228,7 +230,7 @@ SELECT AVG(`chinese`) as 'chinese', AVG(`math`) as 'math', AVG(`english`) as 'en
 
 #### 演示
 
-```js
+```ts
 const db = flq
   .from('student')
   .field('name', 'age', 'chinese', 'math', 'english')
@@ -268,7 +270,7 @@ SELECT `name`, `age`, `chinese`, `math`, `english` FROM `student` ORDER BY `age`
 
 #### 演示
 
-```js
+```ts
 const db = flq
   .from('student')
   .field('name', 'age', 'chinese', 'math', 'english')
@@ -299,7 +301,7 @@ SELECT `name`, `age`, `chinese`, `math`, `english` FROM `student` LIMIT 0, 3
 
 #### 演示
 
-```js
+```ts
 const db = flq
   .from('student')
   .field('name', 'age', 'chinese', 'math', 'english')
@@ -337,7 +339,7 @@ Flq 内部使用`SQL_CALC_FOUND_ROWS`来返回总列数，将结果保存在`Flq
 <CodeGroup>
   <CodeGroupItem title="模型配置" active>
 
-```js
+```ts
 const flq = new Flq(
   {
     pool: true, // 使用连接池 !推荐使用
@@ -361,7 +363,7 @@ const flq = new Flq(
 
   <CodeGroupItem title="sql配置">
 
-```js
+```ts
 flq.test(async () => {
   const db = flq
     .from('student')

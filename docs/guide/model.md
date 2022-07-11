@@ -10,7 +10,7 @@
 
 模型定义的基本结构是
 
-```js
+```ts
 {
   表名: {
     字段名: {
@@ -31,7 +31,7 @@
 
 比如：
 
-```js
+```ts
 const flq = new Flq(
   {
     pool: true, // 使用连接池 !推荐使用
@@ -67,7 +67,7 @@ const flq = new Flq(
 <CodeGroup>
   <CodeGroupItem title="模型配置" active>
 
-```js
+```ts
 const flq = new Flq(
   {
     pool: true, // 使用连接池 !推荐使用
@@ -91,7 +91,7 @@ const flq = new Flq(
   </CodeGroupItem>
   <CodeGroupItem title="sql配置">
 
-```js
+```ts
 flq.test(async () => {
   const db = flq
     .from('student')
@@ -118,7 +118,7 @@ SELECT `name`, `chinese`, `math`, `english` FROM `student`
   </CodeGroupItem>
   <CodeGroupItem title="结果">
 
-```js
+```ts
 ;[
   {
     name: '张三',
@@ -165,7 +165,7 @@ SELECT `name`, `chinese`, `math`, `english` FROM `student`
 <CodeGroup>
   <CodeGroupItem title="模型配置" active>
 
-```js
+```ts
 const flq = new Flq(
   {
     pool: true, // 使用连接池 !推荐使用
@@ -189,7 +189,7 @@ const flq = new Flq(
   </CodeGroupItem>
   <CodeGroupItem title="sql配置">
 
-```js
+```ts
 flq.test(async () => {
   const db = flq.from('student').where({ id: 1 }).virtualSet({ all: 60 })
   const result = await db.update()
@@ -224,7 +224,7 @@ INSERT INTO `student` (`english`, `math`, `chinese`) VALUES (`60`, `60`, `60`)
 <CodeGroup>
   <CodeGroupItem title="模型配置" active>
 
-```js
+```ts
 const flq = new Flq(
   {
     pool: true, // 使用连接池 !推荐使用
@@ -248,7 +248,7 @@ const flq = new Flq(
   </CodeGroupItem>
   <CodeGroupItem title="sql配置">
 
-```js
+```ts
 flq.test(async () => {
   const db = flq.from('student').field('name', 'age')
   const result = await db.find()
@@ -272,7 +272,7 @@ SELECT `name`, `age` FROM `student`
   </CodeGroupItem>
   <CodeGroupItem title="结果">
 
-```js
+```ts
 ;[
   { name: '张三', age: '11周岁' },
   { name: '李四', age: '12周岁' },
@@ -313,7 +313,7 @@ SELECT `name`, `age` FROM `student`
 <CodeGroup>
   <CodeGroupItem title="模型配置" active>
 
-```js
+```ts
 const flq = new Flq(
   {
     pool: true, // 使用连接池 !推荐使用
@@ -337,7 +337,7 @@ const flq = new Flq(
   </CodeGroupItem>
   <CodeGroupItem title="sql配置">
 
-```js
+```ts
 flq.test(async () => {
   const db = flq.from('class').value({ name: 205 })
   const result = await db.add()
@@ -361,7 +361,7 @@ INSERT INTO `class` (`name`, `createAt`, `updateAt`) VALUES (205, '2022-07-10 16
   </CodeGroupItem>
   <CodeGroupItem title="结果">
 
-```js
+```ts
 {
   id: 5,
   name: '205',
@@ -385,7 +385,7 @@ INSERT INTO `class` (`name`, `createAt`, `updateAt`) VALUES (205, '2022-07-10 16
 <CodeGroup>
   <CodeGroupItem title="模型配置" active>
 
-```js
+```ts
 const flq = new Flq(
   {
     pool: true, // 使用连接池 !推荐使用
@@ -409,7 +409,7 @@ const flq = new Flq(
   </CodeGroupItem>
   <CodeGroupItem title="sql配置">
 
-```js
+```ts
 flq.test(async () => {
   const db = flq.from('class').value({ name: 205 })
   const result = await db.add()
@@ -433,7 +433,7 @@ UPDATE `class` SET `teachers` = '1,2,3', `updateAt` = '2022-07-10 17:06:37.858' 
   </CodeGroupItem>
   <CodeGroupItem title="结果">
 
-```js
+```ts
 {
   id: 5,
   name: '205',

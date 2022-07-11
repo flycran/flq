@@ -12,7 +12,7 @@
 
   异步回调函数。该回调的`this`指向`flq`实例本身。
 
-```js
+```ts
 flq.test(async () => {
   const db = flq.from('student')
   const result = await db.find()
@@ -100,7 +100,7 @@ flq.test(async () => {
     `Flq`所有需要用到字段名的地方都支持显式指定表名，下文不再赘述
     :::
 
-    ```js
+    ```ts
     field('name', 'age')
     // 'name', 'age'
     ```
@@ -109,7 +109,7 @@ flq.test(async () => {
 
     将查询所有数组中的字段，与上述用法类似，通常配合聚合方法使用。
 
-    ```js
+    ```ts
     field(['name', 'age'])
     // 'name', 'age'
     ```
@@ -118,14 +118,14 @@ flq.test(async () => {
 
   将键`key`重命名为值`value`
 
-  ```js
+  ```ts
   field({ gender: 'sex' })
   // result: `gende` as 'sex'
   ```
 
   当`value`是数组时，可以指定聚合方法和可选的重命名
 
-  ```js
+  ```ts
   field({ chinese: ['AVG'], math: ['AVG', '数学平均成绩'] })
   // AVG(`chinese`) as 'chinese', AVG(`math`) as '数学平均成绩'
   ```
@@ -136,7 +136,7 @@ flq.test(async () => {
 
   当键名时聚合方法时，`value`将作为`option`被重新传入`field`解析，但默认会包裹聚合方法，在多个字段需要用同一个聚合方法时尤其好用
 
-  ```js
+  ```ts
   field({
     AVG: ['chinese', 'math', 'english'],
   })
@@ -145,7 +145,7 @@ flq.test(async () => {
 
   如果需要重命名
 
-  ```js
+  ```ts
   field({
     AVG: { chinese: '语文', math: '数学', english: '英语' },
   })
@@ -168,7 +168,7 @@ flq.test(async () => {
 
   传入分组的字段即可
 
-```js
+```ts
 group('gender')
 ```
 
@@ -194,7 +194,7 @@ group('gender')
 
       每页条数
 
-    ```js
+    ```ts
     limit({
       page: 1,
       size: 5,
@@ -214,7 +214,7 @@ group('gender')
 
       条数
 
-    ```js
+    ```ts
     limit(5, 5)
     // LIMIT 5, 5
     ```
@@ -259,7 +259,7 @@ group('gender')
 
     按传入的字段排序，排序规则取决于`defOp`的值
 
-    ```js
+    ```ts
     order('age')
     // ORDER BY `age`
     order('age', -1)
@@ -270,7 +270,7 @@ group('gender')
 
     将所有数组中的字段按顺序排序，排序规则取决于`defOp`的值
 
-    ```js
+    ```ts
     order(['age', 'id'])
     // ORDER BY `age`, `id`
     order(['age', 'id'], -1)
@@ -281,14 +281,14 @@ group('gender')
 
     将按照`value`的值决定排序规则
 
-    ```js
+    ```ts
     order({ age: 1, id: -1 })
     // ORDER BY `age`, `id` DESC
     ```
 
     当键名是排序规则时，将`value`重新传入`order`解析。可以传入所有`option`允许的值，但通常配合数组使用。
 
-    ```js
+    ```ts
     order({
       1: ['id', 'age'],
       '-1': ['chinese', 'math', 'english'],
@@ -306,7 +306,7 @@ group('gender')
 
 在分页查询时，自动返回查询的总条数。总条数将保存在调用`flq.find()`的实例下。
 
-```js
+```ts
 const db = flq
   .from('student')
   .field('name', 'age', 'chinese', 'math', 'english')

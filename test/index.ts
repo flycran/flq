@@ -1,5 +1,5 @@
-import { Flq, slot } from '../lib'
-import { compare, find_in_set } from '../lib/functions'
+import { Flq, slot, field, escape } from '../lib'
+import { comp, oper, method, FIND_IN_SET } from '../lib/methods'
 
 const flq = new Flq(
   {
@@ -45,24 +45,19 @@ const flq = new Flq(
 )
 
 flq.test(async () => {
-  // const db = flq
-  //   .from('student')
-  //   .field('name', 'chinese', 'math', 'english')
-  //   .where(
-  //     [
-  //       find_in_set(1, 'association'),
-  //       {
-  //         id: 1,
-  //       },
-  //     ],
-  //     'AND',
-  //     '!='
-  //   )
-  //   .insert({
-  //     line: 60,
-  //   })
-  const db = flq.from('class').value({name: 205})
-  const result = await db.find()
+  const db = flq
+    .from('student')
+    .field('name', 'chinese', 'math', 'english')
+    .where(
+      {
+        math: slot('math'),
+      },
+      'AND',
+      '>'
+    )
+  const result = await db.find({
+    math: oper('english', '+', 20),
+  })
   console.log(db.sql)
   console.log(result)
 })

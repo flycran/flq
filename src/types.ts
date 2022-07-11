@@ -96,17 +96,18 @@ export interface FlqOption {
 }
 
 export type Dbany = string | number | boolean | Date
-
+/**运算符 */
+export type Operator = '+' | '-' | '*' | '/' | '%'
 /**基本索引对象 */
 export type Data = Record<string, any>
 /**表名 */
 export type FromOption = string
 /**查询条件 */
 export namespace WhereOption {
-  export type Operator = 'AND' | 'OR'
-  type NoVal = 'IS NULL' | 'IS NOT NULL'
-  type ArrVal = 'IN' | 'NOT IN'
-  export type Comparator =
+  export type Connector = 'AND' | 'OR'
+  export type NoVal = 'IS NULL' | 'IS NOT NULL'
+  export type ArrVal = 'IN' | 'NOT IN'
+  export type NeedVal =
     | '>'
     | '<'
     | '='
@@ -114,21 +115,22 @@ export namespace WhereOption {
     | '<='
     | '>='
     | '<>'
-    | 'BETWEEN'
     | 'LIKE'
     | 'REGEXP'
-    | NoVal
-    | ArrVal
+  export type Comparator = NeedVal | NoVal | ArrVal | 'BETWEEN'
 
   type Ops =
     | { com: NoVal }
     | { com: ArrVal; val: Dbany[] }
-    | { com: 'BETWEEN'; val: [Dbany | Sql, Dbany | Sql] }
-    | { com: Comparator; val?: Dbany | Sql | Dbany[] }
+    | { com: 'BETWEEN'; val: [Sql | Dbany, Sql | Dbany] }
+    | {
+        com: NeedVal
+        val: Sql | Dbany
+      }
 
   type WhereObj =
     | {
-        [K in Operator | Comparator]?: Option
+        [K in Connector | Comparator]?: Option
       }
     | {
         [x: string]: Sql | Ops | Dbany
