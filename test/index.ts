@@ -1,5 +1,8 @@
-import { Flq, slot, field, escape } from '../lib'
-import { comp, oper, method, FIND_IN_SET } from '../lib/methods'
+import {Flq, hooks} from '../src'
+
+hooks.on('format', (e: string) => {
+  console.log(e)
+})
 
 const flq = new Flq(
   {
@@ -7,57 +10,82 @@ const flq = new Flq(
     user: 'root', // 登陆用户
     password: process.env.SQLPASSWORD, // 登陆密码
     database: 'test', // 数据库名
-  },
-  {
-    student: {
-      association: {
-        toArray: true,
-      },
-      age: {
-        postreat(value) {
-          return value + '周岁'
-        },
-      },
-      avg: {
-        get(row) {
-          return (row.chinese + row.math + row.english) / 3
-        },
-      },
-      all: {
-        set(value, row) {
-          row.chinese = row.math = row.english = value
-        },
-      },
-    },
-    class: {
-      createAt: {
-        default() {
-          return new Date()
-        },
-      },
-      updateAt: {
-        default() {
-          return new Date()
-        },
-      },
-    },
   }
 )
+const association = flq.from('association')
+
+flq.setModel({
+  student: {
+    association: {
+      toArray: true,
+      async postreat(val) {
+        const res = await association.where({
+          id: {
+            com: 'IN',
+            val
+          }
+        }).find()
+        console.log(11111)
+        return res
+      }
+    },
+    age: {
+      postreat(value) {
+        return value + '周岁'
+      },
+    },
+    avg: {
+      get(row) {
+        return (row.chinese + row.math + row.english) / 3
+        // return association.find()
+      },
+    },
+    all: {
+      set(value, row) {
+        row.chinese = row.math = row.english = value
+      },
+    },
+  },
+  class: {
+    createAt: {
+      default() {
+        return new Date()
+      },
+    },
+    updateAt: {
+      default() {
+        return new Date()
+      },
+    },
+  },
+  albums: {
+    index: {indexField: true}
+  },
+  classify: {
+    id: {
+      mainKey: true
+    },
+    child: {
+      childField: true
+    },
+    parent: {
+      parentField: true
+    },
+    level: {
+      gradeField: true
+    }
+  }
+})
 
 flq.test(async () => {
-  const db = flq
-    .from('student')
-    .field('name', 'chinese', 'math', 'english')
-    .where(
-      {
-        math: slot('math'),
-      },
-      'AND',
-      '>'
-    )
-  const result = await db.find({
-    math: oper('english', '+', 20),
+  const db = flq.from('classify').where({
+    id: 9
   })
-  console.log(db.sql)
-  console.log(result)
+  const res = await db.recursion({
+    type: 'up',
+    // gradation: true,
+    stop: 2
+  })
+  console.log(res)
+  return false
 })

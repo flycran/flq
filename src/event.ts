@@ -1,61 +1,59 @@
 // 异步事件订阅
-import { PromiseSet } from './types'
+import {PromiseSet} from './types'
+
 /**异步事件 */
 export class AsyncEvent {
   listener: Map<string, Set<Function>> = new Map()
+
   on(type: string, listener: Function) {
-    const { listener: ls } = this
+    const {listener: ls} = this
     const l = ls.get(type)
     if (!l) ls.set(type, new Set([listener]))
     else l.add(listener)
-    this.emit('addlistener', { type, listener })
+    this.emit('addlistener', {type, listener})
   }
+
   off(type: string, listener: Function) {
-    const { listener: ls } = this
+    const {listener: ls} = this
     const l = ls.get(type)
     if (!l) return false
-    this.emit('removelistener', { type, listener })
+    this.emit('removelistener', {type, listener})
     return l.delete(listener)
   }
+
   async emit(type: string, ...events: any[]) {
     // let date = new Date()
     const ls = this.listener.get(type)
     if (!ls) return
-    const als: Set<Promise<any>> = new Set()
-    await AsyncErgodic(ls, (e) => {
-      const r = e(...events)
-      if (r instanceof Promise) als.add(r)
-    })
-    // console.log(
-    //   `emit: ${type} It took ${new Date().valueOf() - date.valueOf()}ms`
-    // )
+    await AsyncErgodic(ls, (e) => e(...events))
   }
 }
+
 // Array
-export async function AsyncErgodic<T>(
+export function AsyncErgodic<T, R>(
   data: T[],
-  callBack: (value: T, index: number, data: T[]) => void
-): Promise<void>
+  callBack: (value: T, index: number, data: T[]) => R
+): Promise<R[]>
 // Map
-export async function AsyncErgodic<V, K>(
+export function AsyncErgodic<V, K, R>(
   data: Map<K, V>,
-  callBack: (value: V, key: K, data: Map<K, V>) => void
-): Promise<void>
+  callBack: (value: V, key: K, data: Map<K, V>) => R
+): Promise<R[]>
 // Set
-export async function AsyncErgodic<T>(
+export function AsyncErgodic<T, R>(
   data: Set<T>,
-  callBack: (value: T, key: T, data: Set<T>) => void
-): Promise<void>
+  callBack: (value: T, key: T, data: Set<T>) => R
+): Promise<R[]>
 // Object
-export async function AsyncErgodic<T extends Object>(
+export function AsyncErgodic<T, K extends keyof T, R>(
   data: T,
-  callBack: (value: keyof T, key: string, data: T) => void
-): Promise<void>
+  callBack: (value: T[K], key: K, data: T) => R
+): Promise<R[]>
 // 实现
-export async function AsyncErgodic(
+export async function AsyncErgodic<R>(
   data: any,
   callBack: Function
-): Promise<void> {
+): Promise<any[]> {
   const ps: PromiseSet = new Set()
   if ('forEach' in data) {
     data.forEach((a: any, b: any, c: any) => {
@@ -66,5 +64,5 @@ export async function AsyncErgodic(
       ps.add(callBack(data[k], k, data))
     }
   }
-  await Promise.all(ps)
+  return await Promise.all(ps)
 }

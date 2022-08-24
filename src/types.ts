@@ -1,6 +1,6 @@
 // 公共类型声明
-import { Flq, Sql } from './index'
-import { Connection } from 'mysql2'
+import {Flq, Sql} from './index'
+import {Connection} from 'mysql2'
 
 /**连接配置 */
 export interface ConnectOption {
@@ -67,12 +67,11 @@ export interface ConnectOption {
 /**Flq选项描述 */
 export interface FlqOption {
   /**表名 */
-  from?: string
+  from?: string[]
   /**字段 */
   field?: string
   /**条件 */
   where?: string
-  // ！改为对象形式
   /**设置 */
   set: Record<string, any>
   /**插入 */
@@ -84,16 +83,26 @@ export interface FlqOption {
   /**分页 */
   limit?: (number | void)[]
   /**虚拟获取 */
-  virtualGet?: string[]
+  virtualGet?: VirtualGet
   /**虚拟插入 */
-  virtualSet?: Record<string, any>
-  /**子查询 */
-  subField?: SubFieldOption.Obj
-  /**插入id */
-  insertId?: boolean
+  virtualSet?: VirtualSet
   /**完整列数 */
   foundRows?: string
 }
+
+
+export interface CallOption {
+  flq: Flq,
+  parentField: string,
+  childField: string,
+  mainKey: string,
+  gradeField?: string,
+  stop?: (data: Data[]) => any,
+}
+
+export type VirtualGet = string[] | Record<string, any>
+
+export type VirtualSet = Record<string, any>
 
 export type Dbany = string | number | boolean | Date
 /**运算符 */
@@ -124,17 +133,17 @@ export namespace WhereOption {
     | { com: ArrVal; val: Dbany[] }
     | { com: 'BETWEEN'; val: [Sql | Dbany, Sql | Dbany] }
     | {
-        com: NeedVal
-        val: Sql | Dbany
-      }
+    com: NeedVal
+    val: Sql | Dbany
+  }
 
   type WhereObj =
     | {
-        [K in Connector | Comparator]?: Option
-      }
+    [K in Connector | Comparator]?: Option
+  }
     | {
-        [x: string]: Sql | Ops | Dbany
-      }
+    [x: string]: Sql | Ops | Dbany
+  }
   export type Option = WhereObj | Option[] | Sql | Sql[]
 }
 export type WhereOption = WhereOption.Option
@@ -143,8 +152,8 @@ export namespace FieldOption {
   export type PolyMet = 'AVG' | 'COUNT' | 'MAX' | 'MIN' | 'SUM'
   type FieldObj =
     | {
-        [K in PolyMet]?: Option
-      }
+    [K in PolyMet]?: Option
+  }
     | { [x: string]: string | [string, string] }
   type FieldArr = (string | FieldObj)[]
   export type Option = Sql | string | FieldObj | FieldArr
@@ -168,31 +177,18 @@ export type ValueOption = Record<string, any>
 export type LimitOption =
   | [number, number]
   | [
-      {
-        /**页码(从1开始) */
-        page: number
-        /**每页条数 */
-        size: number
-      }
-    ]
-/**子字段选项 */
-export namespace SubFieldOption {
-  interface Op {}
-
-  export type Obj = Record<string, string | Op>
-  export type Option = Obj | string
-}
-export type SubFieldOption = SubFieldOption.Option
+  {
+    /**页码(从1开始) */
+    page: number
+    /**每页条数 */
+    size: number
+  }
+]
 /**模型选项 */
 export namespace ModelOption {
-  interface SubOption {
-    field: string
-    rename: string
-  }
-
-  type Sub = Record<string, string | SubOption>
-
   export interface Model {
+    /**是否为主键 */
+    mainKey: boolean
     /**类型 */
     type: string
     /**默认值 */
@@ -200,7 +196,7 @@ export namespace ModelOption {
     /**更新值 */
     update: ((this: Flq, row: Data) => Promise<any> | any) | any
     /**虚拟字段获取 */
-    get: (this: Flq, row: Data) => Promise<any> | any
+    get: (this: Flq, row: Data, data?: any) => Promise<any> | any
     /**虚拟字段设置 */
     set: (this: Flq, value: any, row: Data) => Promise<void> | void
     /**预处理 */
@@ -210,48 +206,74 @@ export namespace ModelOption {
     /**重命名 */
     rename:
       | ((
-          this: Flq,
-          key: string,
-          value: any,
-          row: Data
-        ) => Promise<string> | string)
+      this: Flq,
+      key: string,
+      value: any,
+      row: Data
+    ) => Promise<string> | string)
       | string
     /**转数组 */
     toArray: boolean | string
-    /**子表连接 */
-    sub: Sub
+    /**索引字段 */
+    indexField: boolean
+    /**等级字段名 */
+    gradeField: boolean
+    /**父级主键字段名 */
+    parentField: boolean
+    /**字元素字段名 */
+    childField:boolean
   }
-
   export type Option = Record<string, Record<string, Partial<Model>>>
 }
+
+export interface RecursionOption {
+  type?: 'up' | 'down'
+  stop?: number | ((data: Data[]) => any)
+  gradation?: boolean
+  flq?: Flq
+}
+
+export namespace ModelData {
+  export interface Data {
+    indexField: string,
+    gradeField: string,
+    parentField: string
+    mainKey: string
+    childField: string
+  }
+  export type Option = Record<string, Partial<Data>>
+}
+export type ModelData = ModelData.Option
+
 export type ModelOption = ModelOption.Option
 
 export type PromiseSet<T = any> = Set<Promise<T>>
 
-export namespace HooksEvent {
-  export interface Petreat {
+export interface HooksEvent {
+  petreat: ({
     flq: Flq
     row: Record<string, any>
-  }
+  })
 
-  export interface FieldPetreat {
-    flq: Flq
-    model: Partial<ModelOption.Model>
-    key: string
-    value: any
-    row: Record<string, any>
-  }
-
-  export interface Postreat {
+  postreat: {
     flq: Flq
     data: Data[] | Data
     method: string
     connect: Connection
   }
+}
 
-  export interface FieldPostreat {
+export interface ModelUse<T extends keyof ModelOption.Model> {
+  fieldPetreat: {
     flq: Flq
-    model: Partial<ModelOption.Model>
+    model: ModelOption.Model[T]
+    key: string
+    value: any
+    row: Record<string, any>
+  }
+  fieldPostreat: {
+    flq: Flq
+    model: ModelOption.Model[T]
     key: string
     value: any
     row: Record<string, any>

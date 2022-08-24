@@ -1,35 +1,64 @@
-import {
-  Connection,
-  createConnection,
-  createPool,
-  escape as $escape,
-  Pool,
-} from 'mysql2'
-import { AsyncEvent } from './event'
+import {Connection, createConnection, createPool, escape as $escape, Pool,} from 'mysql2'
+import {AsyncErgodic, AsyncEvent} from './event'
 
 import {
+  CallOption,
   ConnectOption,
+  Data, Dbany,
   FieldOption,
   FlqOption,
   FromOption,
-  GroupOption,
+  GroupOption, HooksEvent,
   LimitOption,
+  ModelData,
   ModelOption,
-  OrderOption,
+  OrderOption, RecursionOption,
   SetOption,
-  SubFieldOption,
   ValueOption,
+  VirtualGet,
+  VirtualSet,
   WhereOption,
 } from './types'
 /**sql模板 */
 import * as templates from './templates'
+import {foundRows} from './templates'
+
+const uppers = new Set('QWERTYUIOPASDFGHJKLZXCVBNM')
+
+export function toHump(key: string) {
+  let s = ''
+  for (let i = 0; i < key.length; i++) {
+    const e = key[i]
+    if (e === '-') {
+      s += key[i + 1].toUpperCase()
+      i++
+    } else {
+      s += e
+    }
+  }
+  return s
+}
+
+export function toBar(key: string) {
+  let s = ''
+  for (let i = 0; i < key.length; i++) {
+    const e = key[i]
+    if (uppers.has(e)) {
+      s += '-' + e.toLowerCase()
+    } else {
+      s += e
+    }
+  }
+  return s
+}
 
 /**安全处理 */
 export function escape(value: any): Sql {
   if (value instanceof Sql) return value
   return new Sql($escape(value))
 }
-/**格式化需要的正则表达式 */
+
+/**格式化要的正则表达式 */
 const RGE = /^.+\(.*?\)$/
 
 /**钩子 */
@@ -114,21 +143,15 @@ export namespace methods {
   export const noVal = new Set(['IS NULL', 'IS NOT NULL'])
   export const arrVal = new Set(['IN', 'NOT IN'])
 
-  /**处理字段,并建立字段映射 */
+  /**处理字段 */
   function fieldM(this: Flq, field: string, as?: string, met?: string): string {
     const fs = field.split('.')
-    let f, tb
+    let f
     if (fs.length > 1) {
       f = pf(fs[0]) + '.' + pf(fs[1])
-      tb = fs[0]
       field = fs[0]
     } else {
       f = pf(fs[0])
-      tb = this.fieldMap.table[0]
-      if (!tb)
-        console.log(
-          `Warning!Flq.field:建立字段映射时无法确定from的值,映射建立失败`
-        )
     }
     if (met) {
       f = `${met.toUpperCase()}(${f})`
@@ -137,18 +160,7 @@ export namespace methods {
     if (as) {
       f = f + ' as ' + escape(as)
     }
-    this.fieldMap.field[tb + '.' + field] = as || field
     return f
-  }
-
-  export function from(this: Flq, ...option: FromOption[]): string {
-    this.fieldMap.table.push(...option)
-    //@ts-ignore
-    return option
-      .map((e) => {
-        return $field(e)
-      })
-      .join(', ')
   }
 
   export const polyMet = new Set(['AVG', 'COUNT', 'MAX', 'MIN', 'SUM'])
@@ -332,17 +344,9 @@ export namespace methods {
     }
     throw new FlqError('methods.set: 不受支持的参数类型')
   }
-
-  export function subField(option: SubFieldOption[]): SubFieldOption.Obj {
-    const obj: SubFieldOption.Obj = {}
-    for (let i = 0; i < option.length; i++) {
-      const e = option[i]
-    }
-    return obj
-  }
 }
 
-function format(e: string, v: any, flq: Flq) {
+function format(e: string, v: any) {
   switch (e) {
     case 'value':
       return methods.value(v)
@@ -373,13 +377,16 @@ function format(e: string, v: any, flq: Flq) {
 
 export class Sql {
   sql: string
+
   constructor(sql: string) {
     this.sql = sql
   }
+
   toString() {
     return this.sql
   }
 }
+
 /**sql语句 */
 export function sql(sql: string) {
   return new Sql(sql)
@@ -390,9 +397,85 @@ export function slot(name: string) {
   return new Sql(`''${name}''`)
 }
 
+/**递归查询方法 */
+function getKeys(data: Record<string, any>[], key: string) {
+  const nr = new Set<number>()
+  for (let i = 0; i < data.length; i++) {
+    nr.add(data[i][key])
+  }
+  return Array.from(nr)
+}
+
+/**向下递归+层级 */
+async function callDown0(data: Data[], option: CallOption) {
+  const {flq, parentField, childField, mainKey, stop} = option
+  for (let i = 0; i < data.length; i++) {
+    const e = data[i]
+    const res = await flq.mainKey(e[mainKey], parentField).find()
+    if(res.length === 0) return  data
+    e[childField] = await callDown0(res, option)
+    if (stop !== undefined && stop(res)) return data
+  }
+  return data
+}
+
+/**向上递归+层级 */
+async function callUp0(data: Data[], option: CallOption): Promise<Data[]> {
+  if (data.length === 0) return data
+  const {flq, childField, parentField, stop} = option
+  const nr = []
+  const map = new Map<number, Data>()
+  for (let i = 0; i < data.length; i++) {
+    const e = data[i]
+    const pid = e[parentField]
+    const rs = map.get(pid)
+    if (rs) {
+      rs.push(e)
+    } else {
+      const cs: Data[] = [e]
+      const res = await flq.mainKey(pid).first()
+      if (!res) return data
+      res[childField] = cs
+      map.set(pid, cs)
+      nr.push(res)
+    }
+  }
+  if(stop !== undefined && stop(nr)) return  nr
+  return callUp0(nr, option)
+}
+
+/**向下递归+扁平 */
+async function callDown1(data: Data[], option: CallOption): Promise<Data[]> {
+  if (data.length === 0) return data
+  const {flq, mainKey, parentField, stop} = option
+  let ids = getKeys(data, mainKey)
+  while (ids.length) {
+    const res = await flq.mainKey(ids, parentField).find()
+    if (res.length === 0) return data
+    data.push(...res)
+    if(stop !== undefined && stop(res)) return data
+    ids = getKeys(res, mainKey)
+  }
+  return data
+}
+
+/**向上递归+扁平 */
+async function callUp1(data: Data[], option: CallOption): Promise<Data[]> {
+  if (data.length === 0) return data
+  const {flq, parentField, stop} = option
+  let ids = getKeys(data, parentField)
+  while (true) {
+    const res = await flq.mainKey(ids).find()
+    if (res.length === 0) return data
+    data.push(...res)
+    if(stop !== undefined && stop(res)) return data
+    ids = getKeys(res, parentField)
+  }
+}
+
 /**Flq */
 export class Flq {
-  constructor(option: ConnectOption, model?: ModelOption) {
+  constructor(option: ConnectOption) {
     if (!option) return
     if (option.pool) {
       //@ts-ignore
@@ -401,7 +484,6 @@ export class Flq {
       //@ts-ignore
       this.connection = createConnection(option)
     }
-    this.model = model
   }
 
   /**sql参数 */
@@ -409,15 +491,12 @@ export class Flq {
     set: {},
     value: {},
   }
-  /**字段映射 */
-  fieldMap = {
-    table: [] as string[],
-    field: {} as Record<string, string>,
-  }
   /**sql语句 */
   sql: string = ''
   /**模型 */
   model?: ModelOption
+  /**模型数据 */
+  modelData?: ModelData
   /**连接 */
   connection?: Connection
   /**连接池 */
@@ -425,18 +504,45 @@ export class Flq {
   /**最后操作的条数 */
   total?: number
   /**查询类型 */
-  type?: 'select' | 'insert' | 'update' | 'delect'
+  type?: 'select' | 'insert' | 'update' | 'remove' | 'list'
   /**插槽 */
   slot?: Record<string, any>
+
+  setModel(model: ModelOption) {
+    const md: ModelData = {}
+    this.modelData = md
+    for (const key in model) {
+      const mod = model[key]
+      const mp: Partial<ModelData.Data> = {}
+      md[key] = mp
+      for (const key in mod) {
+        const op = mod[key]
+        if (op.indexField) {
+          mp.indexField = key
+        } else if (op.parentField) {
+          mp.parentField = key
+        } else if (op.gradeField) {
+          mp.gradeField = key
+        } else if (op.mainKey) {
+          mp.mainKey = key
+        } else if (op.childField) {
+          mp.childField = key
+        }
+      }
+    }
+    this.model = model
+  }
+
   /**测试 */
   async test(callBack: (this: Flq) => Promise<any>) {
-    await callBack.call(this)
-    await this.end()
+    const b = await callBack.call(this)
+    if (b !== false)
+      await this.end()
   }
 
   /**获取连接 */
   getConnect(): Connection | Promise<Connection> {
-    const { pool } = this
+    const {pool} = this
     return new Promise((e, r) => {
       if (pool) {
         pool.getConnection((err, ctn) => {
@@ -478,7 +584,7 @@ export class Flq {
    * @returns sql语句
    */
   format(template: string): string {
-    const { slot, option } = this
+    const {slot, option} = this
     if (slot && option.where) {
       for (const key in slot) {
         const value = slot[key]
@@ -499,7 +605,7 @@ export class Flq {
       const e = rsql.indexOf(']', s + 1)
       const m = rsql.slice(s + 2, e)
       // @ts-ignore
-      const v = format(m, this.option[m], this)
+      const v = format(m, this.option[m])
       if (v) {
         sr.push(' ' + v)
       }
@@ -507,23 +613,10 @@ export class Flq {
     }
     const sql = sr.join('')
     this.sql = sql
-    hooks.emit('format', sql)
+    hooks.emit('format', sql).then()
     return sql
   }
 
-  // /**插入 */
-  // insert() {
-  //   if (!this.option.where) return this
-  //   const db = this.clone()
-  //   for (const key in option) {
-  //     const value = option[key]
-  //     db.option.where = this.option.where.replace(
-  //       new RegExp(`''${key}''`, 'g'),
-  //       escape(value).sql
-  //     )
-  //   }
-  //   return db
-  // }
   /**
    * 发送sql语句, 并根据模型处理数据
    * @param template 格式方法
@@ -531,13 +624,13 @@ export class Flq {
    */
   async send(template: string): Promise<any> {
     if (this.type === 'insert')
-      await hooks.emit('pretreat', { flq: this, row: this.option.value })
+      await hooks.emit('pretreat', {flq: this, row: this.option.value})
     if (this.type === 'update')
-      await hooks.emit('pretreat', { flq: this, row: this.option.set })
-    const { option } = this
+      await hooks.emit('pretreat', {flq: this, row: this.option.set})
+    const {option} = this
     //@ts-ignore
     const ctn: Connection = await this.getConnect()
-    const sql = await this.format(template)
+    const sql = this.format(template)
     const data: any = await this.query(sql, ctn)
     await hooks.emit('postreat', {
       flq: this,
@@ -550,7 +643,7 @@ export class Flq {
       //@ts-ignore
       ctn.release()
     }
-    hooks.emit('send', { data, method: template, option, sql })
+    hooks.emit('send', {data, method: template, option, sql}).then()
     return data
   }
 
@@ -559,22 +652,29 @@ export class Flq {
     // @ts-ignore
     const db = new Flq()
     db.option = deepClone(this.option)
-    db.fieldMap = deepClone(this.fieldMap)
     db.model = this.model
+    db.modelData = this.modelData
     db.connection = this.connection
     db.pool = this.pool
+    return db
+  }
+
+  /**插入（插槽） */
+  insert(slot: Record<string, any>) {
+    const db = this.clone()
+    db.slot = slot
     return db
   }
 
   /**设置表格 */
   from(...option: FromOption[]) {
     const db = this.clone()
-    const { option: sp } = db
-    const sql = option.map((e) => methods.from.call(db, e)).join(', ')
+    const {option: sp} = db
+
     if (sp.from) {
-      sp.from += ', ' + sql
+      sp.from.push(...option)
     } else {
-      sp.from = sql
+      sp.from = option
     }
     return db
   }
@@ -582,7 +682,7 @@ export class Flq {
   /**设置字段 */
   field(...option: FieldOption[]) {
     const db = this.clone()
-    const { option: sp } = db
+    const {option: sp} = db
     const sql = option.map((e) => methods.field.call(db, e)).join(', ')
     if (sp.field) {
       sp.field += ', ' + sql
@@ -599,7 +699,7 @@ export class Flq {
     comparator: WhereOption.Comparator = '='
   ) {
     const db = this.clone()
-    const { option: sp } = db
+    const {option: sp} = db
     const sql = methods.where(option, connector, comparator)
     if (sp.where) {
       sp.where += ` ${connector} ` + sql
@@ -609,10 +709,23 @@ export class Flq {
     return db
   }
 
+  /**查询主键 */
+  mainKey(id: Dbany | Dbany[], idKey?: string) {
+    const table = this.option.from![0]
+    if (!idKey) {
+      idKey = this.modelData![table].mainKey
+      if (!idKey) throw new FlqError(`${table} missing mainKey`)
+    }
+    if (Array.isArray(id)) {
+      return this.where(sql(`${idKey} IN (${id.map(e => escape(e)).join(', ')})`))
+    }
+    return this.where(sql(`${idKey} = ${id}`))
+  }
+
   /**插入数据 */
   value(option: ValueOption) {
     const db = this.clone()
-    const { option: sp } = db
+    const {option: sp} = db
     if (sp.value) {
       Object.assign(sp.value, option)
     } else {
@@ -624,7 +737,7 @@ export class Flq {
   /**设置值 */
   set(option: SetOption) {
     const db = this.clone()
-    const { option: sp } = db
+    const {option: sp} = db
     if (sp.set) {
       Object.assign(sp.set, option)
     } else {
@@ -636,7 +749,7 @@ export class Flq {
   /**排序 */
   order(option: OrderOption, defOp?: OrderOption.Op) {
     const db = this.clone()
-    const { option: sp } = db
+    const {option: sp} = db
     const sql = methods.order(option, defOp)
     if (sp.order) {
       sp.order += ', ' + sql
@@ -649,7 +762,7 @@ export class Flq {
   /**分组 */
   group(option: GroupOption) {
     const db = this.clone()
-    const { option: sp } = db
+    const {option: sp} = db
     sp.group = methods.group(option)
     return db
   }
@@ -657,7 +770,7 @@ export class Flq {
   /**分页 */
   limit(...option: LimitOption) {
     const db = this.clone()
-    const { option: sp } = db
+    const {option: sp} = db
     sp.limit = methods.limit(option)
     return db
   }
@@ -665,7 +778,7 @@ export class Flq {
   /**每页条数 */
   size(size: number) {
     const db = this.clone()
-    const { option: sp } = db
+    const {option: sp} = db
     if (size > 0) {
       sp.limit = [0, size]
       return db
@@ -676,9 +789,9 @@ export class Flq {
   /**页码 */
   page(page: number) {
     const db = this.clone()
-    const { option: sp } = db
+    const {option: sp} = db
     if (page > 0) {
-      const { limit } = sp
+      const {limit} = sp
       if (!limit || !limit[1])
         throw new FlqError('Flq.page: 必须先设置每页条数')
       limit[0] = (page - 1) * limit[1]
@@ -688,100 +801,150 @@ export class Flq {
   }
 
   /**虚拟获取 */
-  virtualGet(...option: string[]) {
+  vget(option: VirtualGet) {
     const db = this.clone()
-    const { option: sp } = db
-    if (sp.virtualGet) sp.virtualGet.push(...option)
-    else sp.virtualGet = [...option]
-    return db
-  }
-
-  /**虚拟插入 */
-  virtualSet(...option: FlqOption['virtualSet'][]) {
-    const db = this.clone()
-    const { option: sp } = db
-    if (sp.virtualSet) {
-      Object.assign(sp.virtualSet, ...option)
+    const {option: sp} = db
+    if (!sp.virtualGet) sp.virtualGet = {}
+    if (Array.isArray(option)) {
+      for (let i = 0; i < option?.length; i++) {
+        const e = option[i]
+        sp.virtualGet[e] = true
+      }
     } else {
-      sp.virtualSet = Object.assign({}, ...option)
+      Object.assign(sp.virtualGet, option)
     }
     return db
   }
 
-  /**子字段 */
-  subField(...option: SubFieldOption[]) {
+  /**虚拟插入 */
+  vset(option: VirtualSet) {
     const db = this.clone()
-    const { option: sp } = db
-    if (sp.subField) Object.assign(sp.subField, methods.subField(option))
-    else sp.subField = Object.assign({}, methods.subField(option))
+    const {option: sp} = db
+    if (sp.virtualSet) {
+      Object.assign(sp.virtualSet, option)
+    } else {
+      sp.virtualSet = Object.assign({}, option)
+    }
     return db
   }
 
-  /**获取上一次查询的总列数 */
+  /**记录查询总列数 */
   foundRows() {
     const db = this.clone()
-    const { option: sp } = db
+    const {option: sp} = db
     sp.foundRows = 'SQL_CALC_FOUND_ROWS'
     return db
   }
 
-  /**获取最后一个插入的id */
-  insertId() {
-    const db = this.clone()
-    const { option: sp } = db
-    sp.insertId = true
-    return db
-  }
-
   /**查询 */
-  async find(slot?: Record<string, any>): Promise<Record<string, any>[]> {
-    this.slot = slot
+  async find(): Promise<Record<string, any>[]> {
     this.type = 'select'
     return await this.send('select')
   }
 
   /**查询第一个 */
-  async first(slot?: Record<string, any>): Promise<Record<string, any>> {
-    this.slot = slot
+  async first(): Promise<Record<string, any>> {
     this.type = 'select'
     const data = await this.send('select')
     return data[0]
   }
 
   /**插入 */
-  async add(slot?: Record<string, any>) {
-    this.slot = slot
+  async add() {
     this.type = 'insert'
     return await this.send('insert')
   }
 
   /**插入 */
-  async update(slot?: Record<string, any>) {
-    this.slot = slot
+  async update() {
     this.type = 'update'
     return await this.send('update')
   }
 
   /**计数 */
-  async count(slot?: Record<string, any>) {
-    this.slot = slot
+  async count() {
     this.type = 'select'
     const data = await this.send('count')
     return Object.values(data[0])[0]
   }
 
   /**删除 */
-  async del(slot?: Record<string, any>) {
-    this.type = 'delect'
-    return await this.send('delete')
+  async remove() {
+    this.type = 'remove'
+    return await this.send('remove')
+  }
+
+  /**设置列表-仅列表结构有效 */
+  async setList(values: Data[]) {
+    const table = this.option.from![0]
+    const {indexField} = this.modelData![table]
+    if (!indexField) throw new FlqError(`${table} missing indexField`)
+    this.where(this.option.value)
+    await this.remove()
+    return await AsyncErgodic(values, (e, i) => {
+      e[indexField] = i
+      return this.value(e).add()
+    })
+  }
+
+  /**获取列表-仅列表结构有效 */
+  async getList() {
+    const table = this.option.from![0]
+    const {indexField} = this.modelData![table]
+    if (!indexField) throw new FlqError(`${table} missing indexField`)
+    this.where(this.option.value)
+    const data = await this.find()
+    data.sort((a, b) => a[indexField] - b[indexField])
+    return data
+  }
+
+  /**递归查询 */
+  async recursion(option: RecursionOption = {}) {
+    const {type = 'up', gradation, flq = this.clone()} = option
+    let {stop} = option
+    if (!option.flq) {
+      delete flq.option.where
+    }
+    const table = this.option.from![0]
+    if (!this.modelData![table]) throw new FlqError(`${table} missing model`)
+    const mainKey = this.modelData![table].mainKey
+    const childField = this.modelData![table].childField
+    const parentField = this.modelData![table].parentField
+    const gradeField = this.modelData![table].gradeField
+    if (!mainKey) throw new FlqError(`${table} missing mainKey`)
+    if (!parentField) throw new FlqError(`${table} missing parentField`)
+    if (!childField) throw new FlqError(`${table} missing childField`)
+    const data = await this.find()
+    if(data.length === 0) return data
+    if(stop !== undefined && !(typeof stop === 'function')) {
+      if (!gradeField) throw new FlqError(`${table} missing gradeField`)
+      const n = stop
+        stop = (data: Data[]) => data[0][gradeField] === n
+    }
+    if(stop !== undefined && stop(data)) return  data
+    // @ts-ignore
+    const callop: CallOption = {flq, parentField, childField, mainKey, stop}
+    switch (type) {
+      case 'up': {
+        if (gradation)
+          return await callUp0(data, callop)
+        return await callUp1(data, callop)
+      }
+      case 'down': {
+        if (gradation)
+          return await callDown0(data, callop)
+        return await callDown1(data, callop)
+      }
+    }
   }
 }
 
-// 绑定内置事件侦听器
-import * as listeners from './listeners'
+/**总列数 */
+hooks.on('postreat', async ({flq, data, connect}: HooksEvent['postreat']) => {
+  if (!flq.option.foundRows) return
+  if (!Array.isArray(data)) return
+  const d = await flq.query(foundRows, connect)
+  flq.total = Object.values(d[0])[0] as number
+})
 
-for (const key in listeners) {
-  //@ts-ignore
-  const event = listeners[key] as Record<string, Function>
-  Object.values(event).forEach((e) => hooks.on(key, e))
-}
+import './model'
