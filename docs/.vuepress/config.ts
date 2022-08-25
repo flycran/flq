@@ -21,7 +21,7 @@ export default defineUserConfig({
     repo: 'https://gitee.com/cffh/flq',
     lastUpdated: true,
     contributors: false,
-    sidebarDepth: 1,
+    sidebarDepth: 2,
     locales: {
       '/': theme.zh,
       '/en/': theme.en,

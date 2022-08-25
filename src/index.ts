@@ -412,7 +412,7 @@ async function callDown0(data: Data[], option: CallOption) {
   for (let i = 0; i < data.length; i++) {
     const e = data[i]
     const res = await flq.mainKey(e[mainKey], parentField).find()
-    if(res.length === 0) return  data
+    if (res.length === 0) return data
     e[childField] = await callDown0(res, option)
     if (stop !== undefined && stop(res)) return data
   }
@@ -440,7 +440,7 @@ async function callUp0(data: Data[], option: CallOption): Promise<Data[]> {
       nr.push(res)
     }
   }
-  if(stop !== undefined && stop(nr)) return  nr
+  if (stop !== undefined && stop(nr)) return nr
   return callUp0(nr, option)
 }
 
@@ -453,7 +453,7 @@ async function callDown1(data: Data[], option: CallOption): Promise<Data[]> {
     const res = await flq.mainKey(ids, parentField).find()
     if (res.length === 0) return data
     data.push(...res)
-    if(stop !== undefined && stop(res)) return data
+    if (stop !== undefined && stop(res)) return data
     ids = getKeys(res, mainKey)
   }
   return data
@@ -468,7 +468,7 @@ async function callUp1(data: Data[], option: CallOption): Promise<Data[]> {
     const res = await flq.mainKey(ids).find()
     if (res.length === 0) return data
     data.push(...res)
-    if(stop !== undefined && stop(res)) return data
+    if (stop !== undefined && stop(res)) return data
     ids = getKeys(res, parentField)
   }
 }
@@ -879,31 +879,83 @@ export class Flq {
     return await this.send('remove')
   }
 
+  /**获取列表-仅列表结构有效 */
+  async getList() {
+    const table = this.option.from![0]
+    const {indexField} = this.modelData![table]
+    if (!indexField) throw new FlqError(`${table} missing indexField`)
+    const data = await this.find()
+    data.sort((a, b) => a[indexField] - b[indexField])
+    return data
+  }
+
   /**设置列表-仅列表结构有效 */
   async setList(values: Data[]) {
     const table = this.option.from![0]
     const {indexField} = this.modelData![table]
     if (!indexField) throw new FlqError(`${table} missing indexField`)
     this.where(this.option.value)
-    await this.remove()
-    return await AsyncErgodic(values, (e, i) => {
+    const remove = await this.remove()
+    const inserts = await AsyncErgodic(values, (e, i) => {
       e[indexField] = i
       return this.value(e).add()
     })
+    return {
+      remove,
+      inserts
+    }
   }
 
-  /**获取列表-仅列表结构有效 */
-  async getList() {
+  /**截取列表-仅列表结构有效 */
+  async sliceList(index: number, count: number = 1) {
     const table = this.option.from![0]
     const {indexField} = this.modelData![table]
     if (!indexField) throw new FlqError(`${table} missing indexField`)
-    this.where(this.option.value)
-    const data = await this.find()
-    data.sort((a, b) => a[indexField] - b[indexField])
-    return data
+    const remove = await this.where({
+      [indexField]: {
+        com: 'BETWEEN',
+        val: [index, index + count - 1]
+      }
+    }).remove()
+    const update = this.where({
+      [indexField]: {
+        val: index,
+        com: '>'
+      }
+    }).set({
+      [indexField]: sql(`field(indexField) - ${count}`)
+    }).update()
+    return {
+      remove,
+      update
+    }
   }
 
-  /**递归查询 */
+  /**插入列表-仅列表结构有效 */
+  async insertList(index: number, data: Data[]) {
+    const count = data.length
+    const table = this.option.from![0]
+    const {indexField} = this.modelData![table]
+    if (!indexField) throw new FlqError(`${table} missing indexField`)
+    const update = this.where({
+      [indexField]: {
+        val: index,
+        com: '>'
+      }
+    }).set({
+      [indexField]: sql(`field(indexField) + ${count}`)
+    }).update()
+    const inserts = []
+    for (let i = 0; i < data.length; i++) {
+      inserts.push(await this.value({...data[i], [indexField]: index + i}).add())
+    }
+    return {
+      update,
+      inserts
+    }
+  }
+
+  /**递归查询-仅递归结构有效 */
   async recursion(option: RecursionOption = {}) {
     const {type = 'up', gradation, flq = this.clone()} = option
     let {stop} = option
@@ -920,13 +972,13 @@ export class Flq {
     if (!parentField) throw new FlqError(`${table} missing parentField`)
     if (!childField) throw new FlqError(`${table} missing childField`)
     const data = await this.find()
-    if(data.length === 0) return data
-    if(stop !== undefined && !(typeof stop === 'function')) {
+    if (data.length === 0) return data
+    if (stop !== undefined && !(typeof stop === 'function')) {
       if (!gradeField) throw new FlqError(`${table} missing gradeField`)
       const n = stop
-        stop = (data: Data[]) => data[0][gradeField] === n
+      stop = (data: Data[]) => data[0][gradeField] === n
     }
-    if(stop !== undefined && stop(data)) return  data
+    if (stop !== undefined && stop(data)) return data
     // @ts-ignore
     const callop: CallOption = {flq, parentField, childField, mainKey, stop}
     switch (type) {

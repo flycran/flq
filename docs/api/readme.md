@@ -99,6 +99,7 @@ flq.test(async () => {
 
 - **option**
   直接填表名即可，可以传多个表名，若传递多个表名，在引用字段时则需要显式指定表名。例如:`'student.name'`
+
 ### mainKey
 
 `mainKey(value: Dbany | Dbany[], idKey?: string): Flq`
@@ -337,7 +338,7 @@ group('gender')
 const db = flq
   .from('student')
   .field('name', 'age', 'chinese', 'math', 'english')
-  .limit({ page: 1, size: 3 })
+  .limit({page: 1, size: 3})
   .foundRows()
 const result = await db.find()
 console.log(db.sql)
@@ -375,7 +376,7 @@ console.log('总列数:', db.total)
 
 `del(): Promise<Record<string, any>>`
 
-指向删除语句[（template: delete）](https://gitee.com/flycran/flq/blob/master/src/templates.ts)
+执行删除语句[（template: delete）](https://gitee.com/flycran/flq/blob/master/src/templates.ts)
 
 ## 属性
 
@@ -384,3 +385,84 @@ console.log('总列数:', db.total)
 `type: 'select' | 'insert' | 'update' | 'delect'`
 
 sql语句的类型，在调用查询时定义
+
+### getList
+
+`getList(): Promise<Record<string, any>[]>`
+
+仅列表结构有效
+
+获取列表数组，结果会按照索引字段的值进行排序
+
+### setList
+
+`setList(values: Data[]): Promise<{ remove, inserts }>`
+
+仅列表结构有效
+
+设置列表数组，传入一个数据数组，将覆盖所有原列表数据
+
+该方法根据`where`和`value`的内容来确定需要删除的数据，请注意如果两者都为空则可能清空表格
+
+- **values**
+
+  数据数组
+
+### sliceList
+
+`sliceList(index: number, count: number = 1): Promise<{ remove, update }>`
+
+仅列表结构有效
+
+截取列表，该操作会删除指定位置和数量的数据
+
+该操作将直接删除数据，而不会返回截取的数据，如果需要截取并返回数据，请使用`where`+`BETWEEN`
+
+- **index**
+
+  索引，指定从什么位置开始截取
+
+- **count**
+
+  数量，指定截取的条数
+
+### insertList
+
+`insertList(index: number, data: Record<string, any>[]): Promise<{ update, inserts }>`
+
+仅列表结构有效
+
+插入列表
+
+将数据插入指定位置，位于该位置之后的数据将自动后移
+
+- **index**
+  索引，指定从什么位置开始插入
+
+- **data**
+  要插入的数据数组
+
+### recursion
+
+`recursion(option: RecursionOption = {}): Promise<Record<string, any>[]>`
+
+仅枝叶结构有效
+
+该方法根据查询的方向和是否扁平化课分为四种模式
+
+- option
+
+  选项
+  - type
+
+    模式，可选的模式为`up`向上递归，`down`向下递归
+  - gradation
+
+  是否使用层次模式
+  - stop
+
+  停止条件，传入`number`则在数据的`gradeField`等于`stop`时停止递归，传入`function`则调用函数，在函数返回`true`
+  时停止递归。函数接收一个数据数组作为参数(`Record<string, any>[]`)，并且该数组的长度不是`0`。若不提供该参数则在无法查询到更多关联数据时自动停止递归。
+ - flq
+  
+  `Flq`的实例对象，如果提供该参数，则使用提供的对象查询关联数据，否则使用自动克隆的实例查询。该选项在需要对递归做额外限制的时候有用。

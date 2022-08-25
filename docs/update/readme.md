@@ -4,10 +4,11 @@
 
 ## v0.2.0
 
-重写模型处理的核心逻辑
-`Flq`新增实例方法`insert`、`getList`、`setlist`、`delList`、`recursion`
+- 重写模型处理的核心逻辑
 
-新增模型选项`indexField`、`gradeField`、`parentField`、`childField`
+- `Flq`新增实例方法`insert`、`getList`、`setlist`、`sliceList`、`insertList`、`recursion`
+
+- 新增模型选项`indexField`、`gradeField`、`parentField`、`childField`
 
 ## v0.1.0
 
