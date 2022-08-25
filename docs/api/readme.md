@@ -1,6 +1,8 @@
 # Flq
 
-## test
+## 方法
+
+### test
 
 `test(callBack: (this: Flq) => Promise<any>): void`
 
@@ -12,6 +14,12 @@
 
   异步回调函数。该回调的`this`指向`flq`实例本身。
 
+:::tip
+
+如果只是想利用异步环境，可以`return false`以阻止自动关闭连接
+
+:::
+
 ```ts
 flq.test(async () => {
   const db = flq.from('student')
@@ -20,19 +28,19 @@ flq.test(async () => {
 })
 ```
 
-## getConnect
+### getConnect
 
 `getConnect(): Promise<Connection>`
 
 返回一个数据库连接
 
-## end
+### end
 
 `end(): Promise<void>`
 
 用于结束数据库连接
 
-## query
+### query
 
 `query(sql: string, connection?: Connection | Pool): Promise<any>`
 
@@ -46,7 +54,7 @@ flq.test(async () => {
 
   连接
 
-## format
+### format
 
 `format(template: string): string`
 
@@ -57,7 +65,7 @@ flq.test(async () => {
   sql 模板。所用可用的模板可以在[flq/src/templates](https://gitee.com/flycran/flq/blob/master/src/templates.ts)
   下找到。
 
-## send
+### send
 
 `send(template: string): Promise<any>`
 
@@ -68,22 +76,41 @@ flq.test(async () => {
   sql 模板。所用可用的模板可以在[flq/src/templates](https://gitee.com/flycran/flq/blob/master/src/templates.ts)
   下找到。
 
-## clone
+### clone
 
 `clone(): Flq`
 
 克隆`flq`实例，将继承 mysql 连接和 FLQ 模型，拷贝 sql 配置和字段映射。
 
-## from
+### insert
 
-`from(...option: string[])`
+`insert(slot: Record<string, any>): Flq`
+
+插入（插槽）
+
+- **slot**
+  由插槽名和值组成的键值对
+
+### from
+
+`from(...option: string[]): Flq`
 
 配置操作的表格，尽量优先配置该选项，否则模型处理将不会工作
 
 - **option**
-  直接填表名即可，可以传多个表名，若传递多个表名，在引用字段时则需要显式指定表名。例如:`'student.name'`，否则将影响[字段映射](/)
+  直接填表名即可，可以传多个表名，若传递多个表名，在引用字段时则需要显式指定表名。例如:`'student.name'`
+### mainKey
 
-## field
+`mainKey(value: Dbany | Dbany[], idKey?: string): Flq`
+
+按主键查询或指定键查询
+
+- **value**
+  查询值，传入数组将查询匹配数组中任意元素的数据，否则查询`idKey`等于`value`的数据
+- **idKey**
+  键名，省略时将使用
+
+### field
 
 `field(...option: FieldOption[]): Flq`
 
@@ -152,13 +179,13 @@ flq.test(async () => {
   // AVG(`chinese`) as '语文', AVG(`math`) as '数学', AVG(`english`) as '英语'
   ```
 
-## where
+### where
 
 `where(...option: WhereOption[]): Flq`
 
 查询条件
 
-## group
+### group
 
 `group(option: string): Flq`
 
@@ -172,7 +199,7 @@ flq.test(async () => {
 group('gender')
 ```
 
-## limit
+### limit
 
 `limit(...option: LimitOption): Flq`
 
@@ -219,7 +246,7 @@ group('gender')
     // LIMIT 5, 5
     ```
 
-## size
+### size
 
 `size(size: number): Flq`
 
@@ -229,7 +256,7 @@ group('gender')
 
   每页条数
 
-## page
+### page
 
 `page(page: number): Flq`
 
@@ -245,7 +272,7 @@ group('gender')
 
 :::
 
-## order
+### order
 
 `order(option: OrderOption, defOp?: OrderOption.Op): Flq`
 
@@ -300,7 +327,7 @@ group('gender')
 
   默认排序规则，可用的排序规则为`1`、`-1`、`ASC`、`DESC`。其中的`1`和`-1`可以是字符串或数值
 
-## foundRows
+### foundRows
 
 `foundRows(): Flq`
 
@@ -318,13 +345,13 @@ console.log(result)
 console.log('总列数:', db.total)
 ```
 
-## find
+### find
 
 `find(): Promise<Record<string, any>[]>`
 
 执行查询语句[（template: select）](https://gitee.com/flycran/flq/blob/master/src/templates.ts)
 
-## first
+### first
 
 `first(): Promise<Record<string, any>>`
 
@@ -332,26 +359,28 @@ console.log('总列数:', db.total)
 
 该方法会忽略分页、分组、排序等无意义的配置项。
 
-## add
+### add
 
 `add(): Promise<Record<string, any>>`
 
 执行插入语句[（template: insert）](https://gitee.com/flycran/flq/blob/master/src/templates.ts)
 
-## count
+### count
 
 `count(): Promise<number>`
 
 查询复合条件的数据条数[（template: count）](https://gitee.com/flycran/flq/blob/master/src/templates.ts)
 
-## del
+### del
 
 `del(): Promise<Record<string, any>>`
 
 指向删除语句[（template: delete）](https://gitee.com/flycran/flq/blob/master/src/templates.ts)
 
-## type
+## 属性
+
+### type
 
 `type: 'select' | 'insert' | 'update' | 'delect'`
 
-sql语句的类型，在调用查询时定义，可用的值为: `select`、`insert`、`update`、`delete`
+sql语句的类型，在调用查询时定义
