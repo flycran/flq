@@ -65,6 +65,9 @@ db.find().then((e) => console.log(e))
 `test`方法将异步执行，并且在回调完成后立即关闭`mysql`连接
 :::
 
+<Apply>
+  <template #query>
+
 ```ts
 const { Flq } = require('flq')
 
@@ -84,6 +87,9 @@ flq.test(async () => {
   console.log(result)
 })
 ```
+
+  </template>
+</Apply>
 
 为了方便演示，后续教程将始终以测试模式运行，并省略不必要的演示。
 

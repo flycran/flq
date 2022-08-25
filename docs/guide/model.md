@@ -6,11 +6,11 @@
 
 ## 模型的定义
 
-模型需要在`Flq`实例化时定义，并且不能更改，因为`Flq`需要在模型定义时建立缓存，以提高查询速度。
+使用`flq.setModel`定义模型
 
 模型定义的基本结构是
 
-```ts
+```text
 {
   表名: {
     字段名: {
@@ -32,26 +32,17 @@
 比如：
 
 ```ts
-const flq = new Flq(
-  {
-    pool: true, // 使用连接池 !推荐使用
-    user: 'root', // 登陆用户
-    password: process.env.SQLPASSWORD, // 登陆密码
-    database: 'test', // 数据库名
-  },
-  /**模型 */
-  {
-    student: {
-      name: {
-        pretreat(value, data) {
-          console.log(value)
-          if (value < 12) return 12
-          return value
-        },
+flq.setModel({
+  student: {
+    name: {
+      pretreat(value, data) {
+        console.log(value)
+        if (value < 12) return 12
+        return value
       },
     },
-  }
-)
+  },
+})
 ```
 
 你可以在[model](/api/model.html)找到所有模型选项的标准定义，或者查阅下文的快速上手指南。
@@ -64,32 +55,10 @@ const flq = new Flq(
 
 例如想要我想在获取所有学生成绩的同时，自动计算每个学生的平均成绩，就可以定义一个虚拟字段
 
-<CodeGroup>
-  <CodeGroupItem title="模型配置" active>
+> 点击model切换模型配置，Query切换查询配置
 
-```ts
-const flq = new Flq(
-  {
-    pool: true, // 使用连接池 !推荐使用
-    user: 'root', // 登陆用户
-    password: process.env.SQLPASSWORD, // 登陆密码
-    database: 'test', // 数据库名
-  },
-  /**模型 */
-  {
-    student: {
-      avg: {
-        get(row) {
-          return (row.chinese + row.math + row.english) / 3
-        },
-      },
-    },
-  }
-)
-```
-
-  </CodeGroupItem>
-  <CodeGroupItem title="sql配置">
+<Apply>
+  <template #query>
 
 ```ts
 flq.test(async () => {
@@ -103,23 +72,42 @@ flq.test(async () => {
 })
 ```
 
-  </CodeGroupItem>
-</CodeGroup>
+  </template>
+  <template #model>
+
+```ts
+flq.setModel({
+  student: {
+    avg: {
+      get(row) {
+        return (row.chinese + row.math + row.english) / 3
+      },
+    },
+  },
+})
+```
+
+  </template>
+</Apply>
+
+:::tip
 
 该模型选项不会影响 sql 语句的解析
 
-<CodeGroup>
-  <CodeGroupItem title="sql" active>
+:::
+
+<Result>
+  <template #sql>
 
 ```sql
 SELECT `name`, `chinese`, `math`, `english` FROM `student`
 ```
 
-  </CodeGroupItem>
-  <CodeGroupItem title="结果">
+  </template>
+  <template #data>
 
-```ts
-;[
+```json5
+[
   {
     name: '张三',
     chinese: 86,
@@ -127,7 +115,13 @@ SELECT `name`, `chinese`, `math`, `english` FROM `student`
     english: 65,
     avg: 76.33333333333333,
   },
-  { name: '李四', chinese: 56, math: 56, english: 23, avg: 45 },
+  {
+    name: '李四',
+    chinese: 56,
+    math: 56,
+    english: 23,
+    avg: 45
+  },
   {
     name: '王五',
     chinese: 89,
@@ -135,7 +129,13 @@ SELECT `name`, `chinese`, `math`, `english` FROM `student`
     english: 91,
     avg: 73.66666666666667,
   },
-  { name: '赵六', chinese: 86, math: 97, english: 78, avg: 87 },
+  {
+    name: '赵六',
+    chinese: 86,
+    math: 97,
+    english: 78,
+    avg: 87
+  },
   {
     name: '钱七',
     chinese: 91,
@@ -147,8 +147,8 @@ SELECT `name`, `chinese`, `math`, `english` FROM `student`
 ]
 ```
 
-  </CodeGroupItem>
-</CodeGroup>
+  </template>
+</Result>
 
 `get`选项支持`Promise`，它将阻塞数据返回，直到所有的 get 都执行完成，意味着你可以在虚拟获取函数里查询另一个表格。
 
@@ -162,44 +162,35 @@ SELECT `name`, `chinese`, `math`, `english` FROM `student`
 
 例如我想同时设置学生的所有成绩，我可以定义一个虚拟设置函数
 
-<CodeGroup>
-  <CodeGroupItem title="模型配置" active>
-
-```ts
-const flq = new Flq(
-  {
-    pool: true, // 使用连接池 !推荐使用
-    user: 'root', // 登陆用户
-    password: process.env.SQLPASSWORD, // 登陆密码
-    database: 'test', // 数据库名
-  },
-  /**模型 */
-  {
-    student: {
-      all: {
-        set(value, row) {
-          row.chinese = row.math = row.english = value
-        },
-      },
-    },
-  }
-)
-```
-
-  </CodeGroupItem>
-  <CodeGroupItem title="sql配置">
+<Apply>
+  <template #query>
 
 ```ts
 flq.test(async () => {
-  const db = flq.from('student').where({ id: 1 }).virtualSet({ all: 60 })
+  const db = flq.from('student').where({id: 1}).virtualSet({all: 60})
   const result = await db.update()
   console.log(db.sql)
   console.log(result)
 })
 ```
 
-  </CodeGroupItem>
-</CodeGroup>
+  </template>
+  <template #model>
+
+```ts
+flq.setModel({
+  student: {
+    all: {
+      set(value, row) {
+        row.chinese = row.math = row.english = value
+      },
+    },
+  },
+})
+```
+
+  </template>
+</Apply>
 
 它将等同于如下 sql 语句
 
@@ -221,32 +212,8 @@ INSERT INTO `student` (`english`, `math`, `chinese`) VALUES (`60`, `60`, `60`)
 
 例如我想在每个学生的年龄后拼接一段字符串
 
-<CodeGroup>
-  <CodeGroupItem title="模型配置" active>
-
-```ts
-const flq = new Flq(
-  {
-    pool: true, // 使用连接池 !推荐使用
-    user: 'root', // 登陆用户
-    password: process.env.SQLPASSWORD, // 登陆密码
-    database: 'test', // 数据库名
-  },
-  /**模型 */
-  {
-    student: {
-      age: {
-        postreat(value) {
-          return value + '周岁'
-        },
-      },
-    },
-  }
-)
-```
-
-  </CodeGroupItem>
-  <CodeGroupItem title="sql配置">
+<Apply>
+  <template #query>
 
 ```ts
 flq.test(async () => {
@@ -257,36 +224,75 @@ flq.test(async () => {
 })
 ```
 
-  </CodeGroupItem>
-</CodeGroup>
+  </template>
+  <template #model>
+
+```ts
+flq.setModel({
+  student: {
+    age: {
+      postreat(value) {
+        return value + '周岁'
+      },
+    },
+  },
+})
+```
+
+  </template>
+</Apply>
 
 `postreat`选项不会影响 sql 解析
 
-<CodeGroup>
-  <CodeGroupItem title="sql" active>
+<Result>
+  <template #sql>
 
 ```sql
 SELECT `name`, `age` FROM `student`
 ```
 
-  </CodeGroupItem>
-  <CodeGroupItem title="结果">
+  </template>
+  <template #data>
 
-```ts
-;[
-  { name: '张三', age: '11周岁' },
-  { name: '李四', age: '12周岁' },
-  { name: '王五', age: '10周岁' },
-  { name: '赵六', age: '11周岁' },
-  { name: '钱七', age: '11周岁' },
-  { name: '郑八', age: '13周岁' },
-  { name: '周九', age: '12周岁' },
-  { name: '孙十', age: '12周岁' },
+```json5
+[
+  {
+    name: '张三',
+    age: '11周岁'
+  },
+  {
+    name: '李四',
+    age: '12周岁'
+  },
+  {
+    name: '王五',
+    age: '10周岁'
+  },
+  {
+    name: '赵六',
+    age: '11周岁'
+  },
+  {
+    name: '钱七',
+    age: '11周岁'
+  },
+  {
+    name: '郑八',
+    age: '13周岁'
+  },
+  {
+    name: '周九',
+    age: '12周岁'
+  },
+  {
+    name: '孙十',
+    age: '12周岁'
+  },
 ]
 ```
 
-  </CodeGroupItem>
-</CodeGroup>
+  </template>
+</Result>
 
 `postreat`同样支持`Promise`
 
@@ -310,69 +316,61 @@ SELECT `name`, `age` FROM `student`
 
 例如实现数据创建时间
 
-<CodeGroup>
-  <CodeGroupItem title="模型配置" active>
-
-```ts
-const flq = new Flq(
-  {
-    pool: true, // 使用连接池 !推荐使用
-    user: 'root', // 登陆用户
-    password: process.env.SQLPASSWORD, // 登陆密码
-    database: 'test', // 数据库名
-  },
-  /**模型 */
-  {
-    class: {
-      createAt: {
-        default() {
-          return new Date()
-        },
-      },
-    },
-  }
-)
-```
-
-  </CodeGroupItem>
-  <CodeGroupItem title="sql配置">
+<Apply>
+  <template #query>
 
 ```ts
 flq.test(async () => {
-  const db = flq.from('class').value({ name: 205 })
+  const db = flq.from('class').value({name: 205})
   const result = await db.add()
   console.log(db.sql)
   console.log(result)
 })
 ```
 
-  </CodeGroupItem>
-</CodeGroup>
+  </template>
+  <template #model>
 
-结果
+```ts
+flq.setModel({
+  class: {
+    createAt: {
+      default() {
+        return new Date()
+      },
+    },
+  },
+})
+```
 
-<CodeGroup>
-  <CodeGroupItem title="sql" active>
+  </template>
+</Apply>
+
+#### 结果
+
+<Result>
+  <template #sql>
 
 ```sql
 INSERT INTO `class` (`name`, `createAt`, `updateAt`) VALUES (205, '2022-07-10 16:38:15.844', '2022-07-10 16:38:15.844')
 ```
 
-  </CodeGroupItem>
-  <CodeGroupItem title="结果">
+  </template>
+  <template #data>
 
-```ts
+```json5
 {
-  id: 5,
-  name: '205',
-  teachers: null,
-  createAt: 2022-07-10T08:38:16.000Z,
-  updateAt: 2022-07-10T08:38:16.000Z
+  fieldCount: 0,
+  affectedRows: 1,
+  insertId: 8,
+  info: '',
+  serverStatus: 2,
+  warningStatus: 0
 }
 ```
 
-  </CodeGroupItem>
-</CodeGroup>
+  </template>
+</Result>
 
 :::tip
 
@@ -382,71 +380,63 @@ INSERT INTO `class` (`name`, `createAt`, `updateAt`) VALUES (205, '2022-07-10 16
 
 也可以用`update`选项实现数据更新时间
 
-<CodeGroup>
-  <CodeGroupItem title="模型配置" active>
-
-```ts
-const flq = new Flq(
-  {
-    pool: true, // 使用连接池 !推荐使用
-    user: 'root', // 登陆用户
-    password: process.env.SQLPASSWORD, // 登陆密码
-    database: 'test', // 数据库名
-  },
-  /**模型 */
-  {
-    class: {
-      updateAt: {
-        update() {
-          return new Date()
-        },
-      },
-    },
-  }
-)
-```
-
-  </CodeGroupItem>
-  <CodeGroupItem title="sql配置">
+<Apply>
+  <template #query>
 
 ```ts
 flq.test(async () => {
-  const db = flq.from('class').value({ name: 205 })
+  const db = flq.from('class').value({name: 205})
   const result = await db.add()
   console.log(db.sql)
   console.log(result)
 })
 ```
 
-  </CodeGroupItem>
-</CodeGroup>
+  </template>
+  <template #model>
+
+```ts
+flq.setModel({
+  class: {
+    updateAt: {
+      update() {
+        return new Date()
+      },
+    },
+  },
+})
+```
+
+  </template>
+</Apply>
 
 结果
 
-<CodeGroup>
-  <CodeGroupItem title="sql" active>
+<Result>
+  <template #sql>
 
 ```sql
 UPDATE `class` SET `teachers` = '1,2,3', `updateAt` = '2022-07-10 17:06:37.858' WHERE `name` = 205
 ```
 
-  </CodeGroupItem>
-  <CodeGroupItem title="结果">
+  </template>
+  <template #data>
 
-```ts
+```json5
 {
-  id: 5,
-  name: '205',
-  teachers: '1,2,3',
-  createAt: 2022-07-10T08:38:16.000Z,
-  updateAt: 2022-07-10T09:06:38.000Z
+  fieldCount: 0,
+  affectedRows: 1,
+  insertId: 8,
+  info: '',
+  serverStatus: 2,
+  warningStatus: 0
 }
 ```
 
-  </CodeGroupItem>
-</CodeGroup>
+  </template>
+</Result>
 
-`update`选项在`insert`中也会调用
+`update`选项在`add`中也会调用
 
 :::tip
 

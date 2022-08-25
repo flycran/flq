@@ -7,15 +7,15 @@
 它看起来应该像这样：
 
 | id  | name | gender | chinese | math | english | class | age | association |
-| --- | ---- | ------ | ------- | ---- | ------- | ----- | --- | ----------- |
-| 1   | 张三 | 男     | 86      | 78   | 65      | 2     | 11  | 1,5,6       |
-| 2   | 李四 | 女     | 56      | 56   | 23      | 1     | 12  | 2,4         |
-| 3   | 王五 | 女     | 89      | 41   | 91      | 2     | 10  | 3,6         |
-| 4   | 赵六 | 男     | 86      | 97   | 78      | 3     | 11  |             |
-| 5   | 钱七 | 男     | 91      | 100  | 86      | 4     | 11  | 2,3,4       |
-| 6   | 郑八 | 女     | 86      | 63   | 75      | 3     | 13  | 1,3,5,6     |
-| 7   | 周九 | 女     | 65      | 57   | 36      | 1     | 12  | 3,5         |
-| 8   | 孙十 | 男     | 58      | 63   | 75      | 4     | 13  | 1,2         |
+|-----|------|--------|---------|------|---------|-------|-----|-------------|
+| 1   | 张三   | 男      | 86      | 78   | 65      | 2     | 11  | 1,5,6       |
+| 2   | 李四   | 女      | 56      | 56   | 23      | 1     | 12  | 2,4         |
+| 3   | 王五   | 女      | 89      | 41   | 91      | 2     | 10  | 3,6         |
+| 4   | 赵六   | 男      | 86      | 97   | 78      | 3     | 11  |             |
+| 5   | 钱七   | 男      | 91      | 100  | 86      | 4     | 11  | 2,3,4       |
+| 6   | 郑八   | 女      | 86      | 63   | 75      | 3     | 13  | 1,3,5,6     |
+| 7   | 周九   | 女      | 65      | 57   | 36      | 1     | 12  | 3,5         |
+| 8   | 孙十   | 男      | 58      | 63   | 75      | 4     | 13  | 1,2         |
 
 你可以在[演示表格](/table/student.html)处找到此表的 sql 语句。
 
@@ -23,7 +23,10 @@
 
 ## 基础查询
 
-#### 演示
+#### 查询
+
+<Apply>
+  <template #query>
 
 ```ts
 // from 要查询的表格
@@ -33,9 +36,24 @@ const result = await db.find()
 console.log(result)
 ```
 
+  </template>
+</Apply>
+
 #### 结果
 
-```sh
+> 点击Data切换查询结果，Sql切换查询语句
+
+<Result>
+  <template #sql>
+
+```sql
+SELECT * FROM `student`
+```
+
+  </template>
+  <template #data>
+
+```json5
 [
   {
     id: 1,
@@ -59,38 +77,71 @@ console.log(result)
     age: 12,
     association: '2,4'
   },
-  //...省略不必要的代码
+  //...
 ]
 ```
 
+  </template>
+</Result>
+
 ## 查询部分字段
 
-#### 演示
+#### 查询
+
+<Apply>
+  <template #query>
 
 ```ts
 flq.test(async () => {
   const db = flq
     .from('student')
-    .where({ gender: '女' })
+    .where({gender: '女'})
     // field 查询的字段
-    .field('name', { gender: 'sex' })
+    .field('name', {gender: 'sex'})
   const result = await db.find()
   console.log(db.sql)
   console.log(result)
 })
 ```
 
+  </template>
+</Apply>
+
 #### 结果
 
-```sh
+<Result>
+  <template #sql>
+
+```sql
 SELECT `name`, `gender` as 'sex' FROM `student` WHERE `gender` = '女'
+```
+
+  </template>
+  <template #data>
+
+```json5
 [
-  { name: '李四', sex: '女' },
-  { name: '王五', sex: '女' },
-  { name: '郑八', sex: '女' },
-  { name: '周九', sex: '女' }
+  {
+    name: '李四',
+    sex: '女'
+  },
+  {
+    name: '王五',
+    sex: '女'
+  },
+  {
+    name: '郑八',
+    sex: '女'
+  },
+  {
+    name: '周九',
+    sex: '女'
+  }
 ]
 ```
+
+  </template>
+</Result>
 
 :::tip
 
@@ -100,22 +151,37 @@ SELECT `name`, `gender` as 'sex' FROM `student` WHERE `gender` = '女'
 
 ## 条件查询
 
-#### 演示
+#### 查询
+
+<Apply>
+  <template #query>
 
 ```ts
 flq.test(async () => {
   // where 查询条件
-  const db = flq.from('student').where({ gender: '女' })
+  const db = flq.from('student').where({gender: '女'})
   const result = await db.find()
   console.log(db.sql)
   console.log(result)
 })
 ```
 
+  </template>
+</Apply>
+
 #### 结果
 
-```sh
+<Result>
+  <template #sql>
+
+```sql
 SELECT * FROM `student` WHERE `gender` = '女'
+```
+
+  </template>
+  <template #data>
+
+```json5
 [
   {
     id: 2,
@@ -143,6 +209,9 @@ SELECT * FROM `student` WHERE `gender` = '女'
 ]
 ```
 
+  </template>
+</Result>
+
 :::tip
 
 前往[API 文档](/api/#where)查看`where`的详细用法
@@ -153,7 +222,10 @@ SELECT * FROM `student` WHERE `gender` = '女'
 
 ## 聚合
 
-#### 演示
+#### 查询
+
+<Apply>
+  <template #query>
 
 ```ts
 flq.test(async () => {
@@ -167,12 +239,33 @@ flq.test(async () => {
 })
 ```
 
+  </template>
+</Apply>
+
 #### 结果
 
-```sh
+<Result>
+  <template #sql>
+
+```sql
 SELECT AVG(`chinese`) as 'chinese', AVG(`math`) as 'math', AVG(`english`) as 'english' FROM `student`
-[ { chinese: '77.1250', math: '69.3750', english: '66.1250' } ]
 ```
+
+  </template>
+  <template #data>
+
+```json5
+[
+  {
+    chinese: '77.1250',
+    math: '69.3750',
+    english: '66.1250'
+  }
+]
+```
+
+  </template>
+</Result>
 
 :::tip
 
@@ -182,7 +275,10 @@ SELECT AVG(`chinese`) as 'chinese', AVG(`math`) as 'math', AVG(`english`) as 'en
 
 ## 分组
 
-#### 演示
+#### 查询
+
+<Apply>
+  <template #query>
 
 ```ts
 const db = flq
@@ -200,10 +296,22 @@ console.log(db.sql)
 console.log(result)
 ```
 
+  </template>
+</Apply>
+
 #### 结果
 
-```sh
+<Result>
+  <template #sql>
+
+```sql
 SELECT AVG(`chinese`) as 'chinese', AVG(`math`) as 'math', AVG(`english`) as 'english', `gender` FROM `student` GROUP BY `gender`
+```
+
+  </template>
+  <template #data>
+
+```json5
 [
   {
     chinese: '80.2500',
@@ -220,6 +328,9 @@ SELECT AVG(`chinese`) as 'chinese', AVG(`math`) as 'math', AVG(`english`) as 'en
 ]
 ```
 
+  </template>
+</Result>
+
 :::tip
 
 `field`和`group`的配置没有先后之分，但为了良好的可读性，一般会遵循 sql 的顺序配置
@@ -228,7 +339,10 @@ SELECT AVG(`chinese`) as 'chinese', AVG(`math`) as 'math', AVG(`english`) as 'en
 
 ## 排序
 
-#### 演示
+#### 查询
+
+<Apply>
+  <template #query>
 
 ```ts
 const db = flq
@@ -244,21 +358,84 @@ console.log(db.sql)
 console.log(result)
 ```
 
+  </template>
+</Apply>
+
 #### 结果
 
-```sh
+<Result>
+  <template #sql>
+
+```sql
 SELECT `name`, `age`, `chinese`, `math`, `english` FROM `student` ORDER BY `age`, `chinese` DESC, `math` DESC, `english` DESC
+```
+
+  </template>
+  <template #data>
+
+```json5
 [
-  { name: '王五', age: 10, chinese: 89, math: 41, english: 91 },
-  { name: '钱七', age: 11, chinese: 91, math: 100, english: 86 },
-  { name: '赵六', age: 11, chinese: 86, math: 97, english: 78 },
-  { name: '张三', age: 11, chinese: 86, math: 78, english: 65 },
-  { name: '周九', age: 12, chinese: 65, math: 57, english: 36 },
-  { name: '李四', age: 12, chinese: 56, math: 56, english: 23 },
-  { name: '郑八', age: 13, chinese: 86, math: 63, english: 75 },
-  { name: '孙十', age: 13, chinese: 58, math: 63, english: 75 }
+  {
+    name: '王五',
+    age: 10,
+    chinese: 89,
+    math: 41,
+    english: 91
+  },
+  {
+    name: '钱七',
+    age: 11,
+    chinese: 91,
+    math: 100,
+    english: 86
+  },
+  {
+    name: '赵六',
+    age: 11,
+    chinese: 86,
+    math: 97,
+    english: 78
+  },
+  {
+    name: '张三',
+    age: 11,
+    chinese: 86,
+    math: 78,
+    english: 65
+  },
+  {
+    name: '周九',
+    age: 12,
+    chinese: 65,
+    math: 57,
+    english: 36
+  },
+  {
+    name: '李四',
+    age: 12,
+    chinese: 56,
+    math: 56,
+    english: 23
+  },
+  {
+    name: '郑八',
+    age: 13,
+    chinese: 86,
+    math: 63,
+    english: 75
+  },
+  {
+    name: '孙十',
+    age: 13,
+    chinese: 58,
+    math: 63,
+    english: 75
+  }
 ]
 ```
+
+  </template>
+</Result>
 
 :::tip
 
@@ -268,28 +445,64 @@ SELECT `name`, `age`, `chinese`, `math`, `english` FROM `student` ORDER BY `age`
 
 ## 分页
 
-#### 演示
+#### 查询
+
+<Apply>
+  <template #query>
 
 ```ts
 const db = flq
   .from('student')
   .field('name', 'age', 'chinese', 'math', 'english')
-  .limit({ page: 1, size: 3 })
+  .limit({page: 1, size: 3})
 const result = await db.find()
 console.log(db.sql)
 console.log(result)
 ```
 
+  </template>
+</Apply>
+
 #### 结果
 
-```sh
+<Result>
+  <template #sql>
+
+```sql
 SELECT `name`, `age`, `chinese`, `math`, `english` FROM `student` LIMIT 0, 3
+```
+
+  </template>
+  <template #data>
+
+```json5
 [
-  { name: '张三', age: 11, chinese: 86, math: 78, english: 65 },
-  { name: '李四', age: 12, chinese: 56, math: 56, english: 23 },
-  { name: '王五', age: 10, chinese: 89, math: 41, english: 91 }
+  {
+    name: '张三',
+    age: 11,
+    chinese: 86,
+    math: 78,
+    english: 65
+  },
+  {
+    name: '李四',
+    age: 12,
+    chinese: 56,
+    math: 56,
+    english: 23
+  },
+  {
+    name: '王五',
+    age: 10,
+    chinese: 89,
+    math: 41,
+    english: 91
+  }
 ]
 ```
+
+  </template>
+</Result>
 
 :::tip
 
@@ -299,13 +512,16 @@ SELECT `name`, `age`, `chinese`, `math`, `english` FROM `student` LIMIT 0, 3
 
 ## 总列数
 
-#### 演示
+#### 查询
+
+<Apply>
+  <template #query>
 
 ```ts
 const db = flq
   .from('student')
   .field('name', 'age', 'chinese', 'math', 'english')
-  .limit({ page: 1, size: 3 })
+  .limit({page: 1, size: 3})
   .foundRows()
 const result = await db.find()
 console.log(db.sql)
@@ -313,17 +529,53 @@ console.log(result)
 console.log('总列数:', db.total)
 ```
 
+  </template>
+</Apply>
+
 #### 结果
 
-```sh
+<Result>
+  <template #sql>
+
+```sql
 SELECT SQL_CALC_FOUND_ROWS `name`, `age`, `chinese`, `math`, `english` FROM `student` LIMIT 0, 3
+```
+
+  </template>
+  <template #data>
+
+```json5
 [
-  { name: '张三', age: 11, chinese: 86, math: 78, english: 65 },
-  { name: '李四', age: 12, chinese: 56, math: 56, english: 23 },
-  { name: '王五', age: 10, chinese: 89, math: 41, english: 91 }
+  {
+    name: '张三',
+    age: 11,
+    chinese: 86,
+    math: 78,
+    english: 65
+  },
+  {
+    name: '李四',
+    age: 12,
+    chinese: 56,
+    math: 56,
+    english: 23
+  },
+  {
+    name: '王五',
+    age: 10,
+    chinese: 89,
+    math: 41,
+    english: 91
+  }
 ]
+```
+
+```shell
 总列数: 8
 ```
+
+  </template>
+</Result>
 
 :::tip
 
@@ -334,34 +586,10 @@ Flq 内部使用`SQL_CALC_FOUND_ROWS`来返回总列数，将结果保存在`Flq
 
 ## 虚拟字段
 
-#### 演示、
+#### 查询
 
-<CodeGroup>
-  <CodeGroupItem title="模型配置" active>
-
-```ts
-const flq = new Flq(
-  {
-    pool: true, // 使用连接池 !推荐使用
-    user: 'root', // 登陆用户
-    password: process.env.SQLPASSWORD, // 登陆密码
-    database: 'test', // 数据库名
-  },
-  {
-    student: {
-      avg: {
-        get(row) {
-          return (row.chinese + row.math + row.english) / 3
-        },
-      },
-    },
-  }
-)
-```
-
-  </CodeGroupItem>
-
-  <CodeGroupItem title="sql配置">
+<Apply>
+  <template #query>
 
 ```ts
 flq.test(async () => {
@@ -375,13 +603,37 @@ flq.test(async () => {
 })
 ```
 
-  </CodeGroupItem>
-</CodeGroup>
+  </template>
+  <template #model>
+
+```ts
+flq.setModel({
+  student: {
+    avg: {
+      get(row) {
+        return (row.chinese + row.math + row.english) / 3
+      },
+    },
+  },
+})
+```
+
+  </template>
+</Apply>
 
 #### 结果
 
-```sh
+<Result>
+  <template #sql>
+
+```sql
 SELECT `name`, `chinese`, `math`, `english` FROM `student`
+```
+
+  </template>
+  <template #data>
+
+```json5
 [
   {
     name: '张三',
@@ -409,6 +661,9 @@ SELECT `name`, `chinese`, `math`, `english` FROM `student`
   //...省略
 ]
 ```
+
+  </template>
+</Result>
 
 :::tip
 虚拟字段属于模型的部分，有关更多模型的介绍请前往[`模型`](/guide/model.html)

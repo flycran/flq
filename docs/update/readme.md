@@ -2,6 +2,13 @@
 
 本页可能不会记录所有的版本，详情请前往[npm ![npm type version](https://badgen.net/npm/v/flq)](https://www.npmjs.com/package/flq)
 
+## v0.2.0
+
+重写模型处理的核心逻辑
+`Flq`新增实例方法`insert`、`getList`、`setlist`、`delList`、`recursion`
+
+新增模型选项`indexField`、`gradeField`、`parentField`、`childField`
+
 ## v0.1.0
 
 完成的完整的`where`配置方法，以及完善剩余的模型选项。

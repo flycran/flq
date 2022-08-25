@@ -20,7 +20,7 @@ export const zh: DefaultThemeOptions = {
     { text: '支持', link: '/support/' },
   ],
   sidebar: {
-    '/guide/': ['readme.md', 'introduction.md', 'query.md', 'condition.md', 'model.md'],
+    '/guide/': ['readme.md', 'introduction.md', 'query.md', 'condition.md', 'model.md', 'modify.md'],
     '/api/': ['readme.md', 'model.md'],
     '/table/': ['student.md', 'class.md']
   },

@@ -508,6 +508,11 @@ export class Flq {
   /**插槽 */
   slot?: Record<string, any>
 
+  /**插件 */
+  static use<T extends keyof ModelOption.Model>(name: T, option: Option<T>) {
+    use(name, option)
+  }
+
   setModel(model: ModelOption) {
     const md: ModelData = {}
     this.modelData = md
@@ -948,3 +953,4 @@ hooks.on('postreat', async ({flq, data, connect}: HooksEvent['postreat']) => {
 })
 
 import './model'
+import {Option, use} from './model'

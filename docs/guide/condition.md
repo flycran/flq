@@ -20,7 +20,7 @@
 
 ```ts
 flq.test(async () => {
-  const db = flq.from('student').where({ id: 1 })
+  const db = flq.from('student').where({id: 1})
   const result = await db.find()
   console.log(db.sql)
   console.log(result)
@@ -37,7 +37,7 @@ SELECT * FROM `student` WHERE `id` = 1
 
 ```ts
 flq.test(async () => {
-  const db = flq.from('student').where({ id: 1, name: '张三' }, 'OR')
+  const db = flq.from('student').where({id: 1, name: '张三'}, 'OR')
   const result = await db.find()
   console.log(db.sql)
   console.log(result)
@@ -100,7 +100,7 @@ SELECT * FROM `student` WHERE `id` = 1 OR (`age` = 10 AND `name` = '张三')
 
 ```ts
 flq.test(async () => {
-  const db = flq.from('student').where({ id: 1, name: '张三' }, 'AND', '!=')
+  const db = flq.from('student').where({id: 1, name: '张三'}, 'AND', '!=')
   const result = await db.find()
   console.log(db.sql)
   console.log(result)
@@ -115,7 +115,7 @@ SELECT * FROM `student` WHERE `id` != 1 AND `name` != '张三'
 
 ```ts
 flq.test(async () => {
-  const db = flq.from('student').where({ '!=': { id: 1, name: '张三' } })
+  const db = flq.from('student').where({'!=': {id: 1, name: '张三'}})
   const result = await db.find()
   console.log(db.sql)
   console.log(result)
@@ -132,7 +132,7 @@ SELECT * FROM `student` WHERE (`id` != 1 AND `name` != '张三')
 flq.test(async () => {
   const db = flq
     .from('student')
-    .where({ id: { com: '!=', val: 1 }, name: '张三' })
+    .where({id: {com: '!=', val: 1}, name: '张三'})
   const result = await db.find()
   console.log(db.sql)
   console.log(result)
@@ -151,7 +151,7 @@ SELECT * FROM `student` WHERE `id` != 1 AND `name` = '张三'
 flq.test(async () => {
   const db = flq
     .from('student')
-    .where({ id: { com: '>', val: 1 }, name: '张三' }, 'AND', '!=')
+    .where({id: {com: '>', val: 1}, name: '张三'}, 'AND', '!=')
   const result = await db.find()
   console.log(db.sql)
   console.log(result)
@@ -237,7 +237,7 @@ SELECT * FROM `student` WHERE `id` BETWEEN 2 AND 4
   <CodeGroupItem title="TypeScript" active>
 
 ```ts
-import { FIND_IN_SET } from 'flq/functions'
+import {FIND_IN_SET} from 'flq/functions'
 ```
 
   </CodeGroupItem>
@@ -245,7 +245,7 @@ import { FIND_IN_SET } from 'flq/functions'
   <CodeGroupItem title="JavaScript">
 
 ```js
-const { FIND_IN_SET } = require('flq/functions')
+const {FIND_IN_SET} = require('flq/functions')
 ```
 
   </CodeGroupItem>
@@ -291,7 +291,8 @@ SELECT * FROM `class` WHERE FIND_IN_SET(1, `teachers`)
 用于插入一个带比较符的表达式
 
 ```ts
-import { comp } from 'flq/methods'
+import {comp} from 'flq/methods'
+
 comp('age', 'BETWEEN', 1, 2)
 comp('age', '<', 1)
 comp('age', 'IN', [1, 2, 3])
@@ -310,7 +311,8 @@ comp('age', 'IS NULL')
 `oper(...param: (Sql | Operator | string | number)[]): Sql`
 
 ```ts
-import { oper } from 'flq/methods'
+import {oper} from 'flq/methods'
+
 oper('age', '+', 1)
 oper('age', '+', 1, '%', 2)
 oper(oper('age', '+', 1), '*', 2)
@@ -349,8 +351,9 @@ oper(oper('age', '+', 1), '*', 2)
 该方法不能自动推断参数的类型，为了防止 Sql 注入，`method`默认会对所有传入进行安全处理，如果需要传入字段名，请使用`field`主动声明
 
 ```ts
-import { field, escape } from 'flq'
-import { method } from 'flq/methods'
+import {field, escape} from 'flq'
+import {method} from 'flq/methods'
+
 method('RIGHT', field('name'), 2)
 ```
 
@@ -368,6 +371,9 @@ RIGHT(`name`, 2)
 
 例如我想查询所有成绩均大于插槽`line`的学生
 
+<Apply>
+  <template #query>
+
 ```ts
 // 封装
 const db = flq
@@ -383,39 +389,65 @@ const db = flq
     '>'
   )
 // 查询
-const result = await db.find({
+const result = await db.insert({
   line: 60,
-})
+}).find()
 ```
 
-结果
+  </template>
+</Apply>
 
-<CodeGroup>
-  <CodeGroupItem title="sql" active>
+#### 结果
+
+<Result>
+  <template #sql>
 
 ```sql
 SELECT `name`, `chinese`, `math`, `english` FROM `student` WHERE `chinese` > 60 AND `math` > 60 AND `english` > 60
 ```
 
-  </CodeGroupItem>
+  </template>
+  <template #data>
 
-  <CodeGroupItem title="结果">
-
-```ts
-;[
-  { name: '张三', chinese: 86, math: 78, english: 65 },
-  { name: '赵六', chinese: 86, math: 97, english: 78 },
-  { name: '钱七', chinese: 91, math: 100, english: 86 },
-  { name: '郑八', chinese: 86, math: 63, english: 75 },
+```json5
+[
+  {
+    name: '张三',
+    chinese: 86,
+    math: 78,
+    english: 65
+  },
+  {
+    name: '赵六',
+    chinese: 86,
+    math: 97,
+    english: 78
+  },
+  {
+    name: '钱七',
+    chinese: 91,
+    math: 100,
+    english: 86
+  },
+  {
+    name: '郑八',
+    chinese: 86,
+    math: 63,
+    english: 75
+  },
 ]
 ```
 
-  </CodeGroupItem>
-</CodeGroup>
+  </template>
+</Result>
 
-插槽可以在任何允许传入`Sql`的地方插入，但插入的值一定会被当作数据进行安全处理，如果你想往插槽中插入原始 sql，请传入一个`Sql`对象
+插槽可以在任何允许传入`Sql`的地方插入，但插入的值一定会被当作数据进行安全处理，如果你想往插槽中插入原始
+sql，请传入一个`Sql`对象
 
 例如查询数学成绩比英语成绩高 20 的学生
+
+<Apply>
+  <template #query>
 
 ```ts
 // 封装
@@ -430,32 +462,96 @@ const db = flq
     '>'
   )
 // 查询
-const result = await db.find({
+const result = await db.insert({
   math: oper('english', '+', 20),
-})
+}).find()
 ```
 
-结果
+  </template>
+</Apply>
 
-<CodeGroup>
-  <CodeGroupItem title="sql" active>
+#### 结果
+
+<Result>
+  <template #sql>
 
 ```sql
 SELECT `name`, `chinese`, `math`, `english` FROM `student` WHERE `math` > `english` + 20
 ```
 
-  </CodeGroupItem>
+  </template>
+  <template #data>
 
-  <CodeGroupItem title="结果">
-
-```ts
-;[
-  { name: '李四', chinese: 56, math: 56, english: 23 },
-  { name: '周九', chinese: 65, math: 57, english: 36 },
+```json5
+[
+  {
+    name: '李四',
+    chinese: 56,
+    math: 56,
+    english: 23
+  },
+  {
+    name: '周九',
+    chinese: 65,
+    math: 57,
+    english: 36
+  }
 ]
 ```
 
-  </CodeGroupItem>
-</CodeGroup>
+  </template>
+</Result>
 
 当然了，如果只是为了查询数学成绩比英语成绩高的学生，完全没比较使用这么复杂的语法，以上仅仅是为了演示插入表达式的可能性
+
+## 查询主键
+
+如果只想简单的根据表格的某一个字段来查询(通常是主键)，使用`mainKey()`方法能节省很多代码，当省略字段名时，必须在模型中定义
+
+<Apply>
+  <template #query>
+
+```ts
+const db = flq.from('student').field('id', 'name').mainKey(1)
+const result = await db.find()
+```
+
+  </template>
+  <template #model>
+
+```ts
+flq.setModel({
+  student: {
+    id: {
+      mainKey: true
+    },
+  }
+})
+```
+
+  </template>
+</Apply>
+
+**结果**
+
+<Result>
+  <template #sql>
+
+```sql
+SELECT `id`, `name` FROM student WHERE id = 1
+```
+
+  </template>
+  <template #data>
+
+```json5
+[
+  {
+    id: 1,
+    name: '张三'
+  }
+]
+```
+
+  </template>
+</Result>
