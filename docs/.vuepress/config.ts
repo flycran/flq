@@ -4,7 +4,7 @@ import { defaultTheme } from '@vuepress/theme-default'
 import { theme } from './configs'
 
 export default defineUserConfig({
-  base: '/',
+  base: '/flq/',
   locales: {
     '/': {
       title: 'FLQ 中文文档',
