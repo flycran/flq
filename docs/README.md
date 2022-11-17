@@ -38,5 +38,3 @@ const dbTest = db.from('test').where({deleteAt: 1})
 const my = await dbTest.where({uid: 1}).find()
 const all = await dbTest.limit({size: 10, page: 1}).find()
 ```
-
-[作者的话](/authorSNote)
