@@ -1,4 +1,4 @@
-import {Flq, hooks} from '../src'
+import {Flq, hooks, sql} from '../src'
 
 hooks.on('format', (e: string) => {
   console.log(e)
@@ -96,8 +96,8 @@ flq.test(async () => {
   // // find 执行查询
   // const result = await db.find()
   // console.log(result)
-  const db = flq.from('class').value({name: 205})
-  const result = await db.add()
-  console.log(db.sql)
-  console.log(result)
+  const db = flq.from('class').set({id: sql('id + 1')}).format('update')
+  // const result = await db.add()
+  // console.log(db.sql)
+  // console.log(result)
 })

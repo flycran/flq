@@ -338,7 +338,11 @@ export namespace methods {
       const arr: any[] = []
       for (const k in option) {
         const v = option[k]
-        arr.push(`${$field(k)} = ${escape(v)}`)
+        if(v instanceof Sql) {
+          arr.push(`${$field(k)} = ${v}`)
+        } else {
+          arr.push(`${$field(k)} = ${escape(v)}`)
+        }
       }
       return arr.join(', ')
     }
