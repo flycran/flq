@@ -1,6 +1,6 @@
 {
   "name": "flq",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "",
   "main": "lib/index.js",
   "types": "./lib/index.d.ts",
@@ -19,6 +19,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@flycran/async-lib": "^1.0.1",
     "mysql2": "^2.3.3"
   },
   "devDependencies": {

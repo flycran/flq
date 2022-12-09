@@ -352,6 +352,12 @@ console.log('总列数:', db.total)
 
 执行查询语句[（template: select）](https://gitee.com/flycran/flq/blob/master/src/templates.ts)
 
+### findRows
+
+`findRows(): Promise<{ total: number, data: Record<string, any>[] }>`
+
+执行查询并返回符合条件的总列数[（template: select）](https://gitee.com/flycran/flq/blob/master/src/templates.ts)
+
 ### first
 
 `first(): Promise<Record<string, any>>`

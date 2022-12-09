@@ -1,5 +1,6 @@
+import { AsyncErgodic } from '@flycran/async-lib'
 import { Connection, createConnection, createPool, escape as $escape, Pool } from 'mysql2'
-import { AsyncErgodic, AsyncEvent } from './event'
+import { hooks } from './hooks'
 import './model'
 import { Option, use } from './model'
 /**sql模板 */
@@ -27,6 +28,10 @@ import {
   VirtualSet,
   WhereOption,
 } from './types'
+
+export {
+  hooks
+}
 
 const uppers = new Set('QWERTYUIOPASDFGHJKLZXCVBNM')
 
@@ -65,9 +70,6 @@ export function escape(value: any): Sql {
 
 /**格式化要的正则表达式 */
 const RGE = /^.+\(.*?\)$/
-
-/**钩子 */
-export const hooks = new AsyncEvent()
 
 /**Flq抛出错误 */
 export class FlqError extends Error {
@@ -850,6 +852,7 @@ export class Flq {
   foundRows() {
     const db = this.clone()
     const { option: sp } = db
+    sp.foundRows = 'SQL_CALC_FOUND_ROWS'
     return db
   }
 

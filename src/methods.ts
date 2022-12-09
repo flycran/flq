@@ -1,6 +1,6 @@
 // sql方法
-import {escape, field as $field, FlqError, methods, Sql} from './index'
-import {Dbany, Operator, WhereOption} from './types'
+import { escape, field as $field, FlqError, methods, Sql } from './index'
+import { Dbany, Operator, WhereOption } from './types'
 
 /**括号 */
 export function brac(

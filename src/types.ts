@@ -1,6 +1,6 @@
 // 公共类型声明
-import {Flq, Sql} from './index'
-import {Connection} from 'mysql2'
+import { Connection } from 'mysql2'
+import { Flq, Sql } from './index'
 
 /**连接配置 */
 export interface ConnectOption {
