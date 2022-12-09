@@ -10,7 +10,6 @@ export const use = <T extends keyof ModelOption.Model>(name: T, option: Option<T
   models.set(name, option)
 }
 // 注册预处理事件
-console.log(hooks)
 hooks.on('pretreat', async (option: HooksEvent['petreat']) => {
   const {flq, row} = option
   const {model} = flq
