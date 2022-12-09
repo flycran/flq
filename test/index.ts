@@ -1,4 +1,4 @@
-import {Flq, hooks} from '../src'
+import {Flq, hooks} from '../oldSrc'
 
 hooks.on('format', (e: string) => {
   console.log(e)
