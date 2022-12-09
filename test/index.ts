@@ -97,7 +97,7 @@ flq.test(async () => {
   // const result = await db.find()
   // console.log(result)
   const db = flq.from('class').value({name: 205})
-  const result = await db.add()
+  const result = db.format('insert')
   console.log(db.sql)
   console.log(result)
 })
