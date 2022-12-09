@@ -522,11 +522,10 @@ const db = flq
   .from('student')
   .field('name', 'age', 'chinese', 'math', 'english')
   .limit({page: 1, size: 3})
-  .foundRows()
-const result = await db.find()
+const result = await db.findRows()
 console.log(db.sql)
-console.log(result)
-console.log('总列数:', db.total)
+console.log(result.data)
+console.log('总列数:', result.total)
 ```
 
   </template>
