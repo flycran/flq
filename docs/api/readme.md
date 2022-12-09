@@ -378,14 +378,6 @@ console.log('总列数:', db.total)
 
 执行删除语句[（template: delete）](https://gitee.com/flycran/flq/blob/master/src/templates.ts)
 
-## 属性
-
-### type
-
-`type: 'select' | 'insert' | 'update' | 'delect'`
-
-sql语句的类型，在调用查询时定义
-
 ### getList
 
 `getList(): Promise<Record<string, any>[]>`
@@ -463,6 +455,14 @@ sql语句的类型，在调用查询时定义
 
   停止条件，传入`number`则在数据的`gradeField`等于`stop`时停止递归，传入`function`则调用函数，在函数返回`true`
   时停止递归。函数接收一个数据数组作为参数(`Record<string, any>[]`)，并且该数组的长度不是`0`。若不提供该参数则在无法查询到更多关联数据时自动停止递归。
- - flq
-  
-  `Flq`的实例对象，如果提供该参数，则使用提供的对象查询关联数据，否则使用自动克隆的实例查询。该选项在需要对递归做额外限制的时候有用。
+- flq
+
+`Flq`的实例对象，如果提供该参数，则使用提供的对象查询关联数据，否则使用自动克隆的实例查询。该选项在需要对递归做额外限制的时候有用。
+
+## 属性
+
+### type
+
+`type: 'select' | 'insert' | 'update' | 'delect'`
+
+sql语句的类型，在调用查询时定义

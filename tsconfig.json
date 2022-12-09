@@ -21,6 +21,7 @@
     "src/*"
   ],
   "exclude": [
+    "test",
     "ndoe_modules"
   ]
 }

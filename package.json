@@ -1,13 +1,14 @@
 {
   "name": "flq",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "",
   "main": "lib/index.js",
   "types": "./lib/index.d.ts",
   "scripts": {
     "test": "ts-node test",
     "dev": "vuepress dev docs",
-    "build": "vuepress build docs"
+    "build": "vuepress build docs",
+    "ts:build": "tsc"
   },
   "keywords": [
     "mysql",
