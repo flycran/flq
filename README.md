@@ -4,9 +4,9 @@
 
 - 让缺乏 SQL 语句经验的前端开发者也可以轻松与数据库交互
 
-- 前往[FLQ 中文文档](https://flq.flycran.xyz)查看完整文档
+- 前往[FLQ 中文文档](https://flycran.gitee.io/flq/)查看完整文档
 
-- go to [FLQ English documents](https://flq.flycran.xyz/en/) View full documentation
+> 该分支为实验分支，尚未发布，请切换到`0.x`查看公布的版本.
 
 ## 基本查询
 
