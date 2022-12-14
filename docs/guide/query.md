@@ -576,10 +576,9 @@ SELECT SQL_CALC_FOUND_ROWS `name`, `age`, `chinese`, `math`, `english` FROM `stu
   </template>
 </Result>
 
-:::tip
+:::warning
 
-Flq 内部使用`SQL_CALC_FOUND_ROWS`来返回总列数，将结果保存在`Flq`实例下，因此务必在调用`find`前保存`Flq`实例。
-若该实例可能被多次`find`，应调用`clone`方法克隆一个独立的`Flq`实例
+如果你正在使用`foundRows`， 请使用`findRows`替代弃。`foundRows`方法已被弃用。详情参阅[`findRows`](../api/readme.md#findrows)
 
 :::
 

@@ -346,6 +346,12 @@ console.log(result)
 console.log('总列数:', db.total)
 ```
 
+::: warning
+
+该方法已弃用，请使用[`findRows`](../api/readme.md#findrows)代替。
+
+:::
+
 ### find
 
 `find(): Promise<Record<string, any>[]>`
@@ -446,7 +452,7 @@ console.log('总列数:', db.total)
 
 仅枝叶结构有效
 
-该方法根据查询的方向和是否扁平化课分为四种模式
+该方法根据查询的方向和是否扁平化分为四种模式
 
 - option
 
@@ -469,6 +475,13 @@ console.log('总列数:', db.total)
 
 ### type
 
-`type: 'select' | 'insert' | 'update' | 'delect'`
+`type?: 'select' | 'insert' | 'update' | 'delect'`
 
 sql语句的类型，在调用查询时定义
+
+### sql
+
+`sql?: string`
+
+sql语句
+
