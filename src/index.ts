@@ -1,5 +1,5 @@
 import { AsyncErgodic } from '@flycran/async-lib'
-import { Connection, createConnection, createPool, escape as $escape, Pool } from 'mysql2'
+import { Connection, createConnection, createPool, escape as $escape, Field, Pool } from 'mysql2'
 import { hooks } from './hooks'
 import './model'
 import { Option, use } from './model'
@@ -30,7 +30,7 @@ import {
 } from './types'
 
 export {
-  hooks
+  hooks,
 }
 
 const uppers = new Set('QWERTYUIOPASDFGHJKLZXCVBNM')
@@ -365,7 +365,7 @@ function format(e: string, v: any) {
       return methods.set(v)
     case 'from':
       if(!v) throw new FlqError('Flq.format:缺少必选配置from')
-      return v
+      return '`' + v + '`'
     case 'field':
       if(!v) return '*'
       return v
@@ -483,6 +483,8 @@ async function callUp1(data: Data[], option: CallOption): Promise<Data[]> {
     ids = getKeys(res, parentField)
   }
 }
+
+const operatorSet = new Set(['+', '-', '*', '/'])
 
 /**Flq */
 export class Flq {
@@ -714,15 +716,14 @@ export class Flq {
     connector: WhereOption.Connector = 'AND',
     comparator: WhereOption.Comparator = '=',
   ) {
-    const db = this.clone()
-    const { option: sp } = db
+    const { option: sp } = this
     const sql = methods.where(option, connector, comparator)
     if(sp.where) {
       sp.where += ` ${ connector } ` + sql
     } else {
       sp.where = sql
     }
-    return db
+    return this
   }
 
   /**查询主键 */
@@ -740,86 +741,80 @@ export class Flq {
 
   /**插入数据 */
   value(option: ValueOption) {
-    const db = this.clone()
-    const { option: sp } = db
+    const { option: sp } = this
     if(sp.value) {
       Object.assign(sp.value, option)
     } else {
       sp.value = option
     }
-    return db
+    return this
   }
 
   /**设置值 */
   set(option: SetOption) {
-    const db = this.clone()
-    const { option: sp } = db
+    const { option: sp } = this
     if(sp.set) {
       Object.assign(sp.set, option)
     } else {
       sp.set = option
     }
-    return db
+    return this
   }
 
   /**排序 */
   order(option: OrderOption, defOp?: OrderOption.Op) {
-    const db = this.clone()
-    const { option: sp } = db
+    const { option: sp } = this
     const sql = methods.order(option, defOp)
     if(sp.order) {
       sp.order += ', ' + sql
     } else {
       sp.order = sql
     }
-    return db
+    return this
   }
 
   /**分组 */
   group(option: GroupOption) {
     const db = this.clone()
-    const { option: sp } = db
+    const { option: sp } = this
     sp.group = methods.group(option)
-    return db
+    return this
   }
 
   /**分页 */
   limit(...option: LimitOption) {
     const db = this.clone()
-    const { option: sp } = db
+    const { option: sp } = this
     sp.limit = methods.limit(option)
-    return db
+    return this
   }
 
   /**每页条数 */
   size(size: number) {
-    const db = this.clone()
-    const { option: sp } = db
+    const { option: sp } = this
     if(size > 0) {
       sp.limit = [ 0, size ]
-      return db
+      return this
     }
     throw new FlqError('Flq.page: 必须传入大于0的整数')
   }
 
   /**页码 */
   page(page: number) {
-    const db = this.clone()
-    const { option: sp } = db
+    const { option: sp } = this
     if(page > 0) {
       const { limit } = sp
       if(!limit || !limit[1])
         throw new FlqError('Flq.page: 必须先设置每页条数')
       limit[0] = (page - 1) * limit[1]
-      return db
+      return this
     }
     throw new FlqError('Flq.page: 必须传入大于0的整数')
   }
 
   /**虚拟获取 */
   vget(option: VirtualGet) {
-    const db = this.clone()
-    const { option: sp } = db
+    const { option: sp } = this
     if(!sp.virtualGet) sp.virtualGet = {}
     if(Array.isArray(option)) {
       for(let i = 0; i < option?.length; i++) {
@@ -829,19 +824,18 @@ export class Flq {
     } else {
       Object.assign(sp.virtualGet, option)
     }
-    return db
+    return this
   }
 
   /**虚拟插入 */
   vset(option: VirtualSet) {
-    const db = this.clone()
-    const { option: sp } = db
+    const { option: sp } = this
     if(sp.virtualSet) {
       Object.assign(sp.virtualSet, option)
     } else {
       sp.virtualSet = Object.assign({}, option)
     }
-    return db
+    return this
   }
 
   /**
@@ -850,20 +844,29 @@ export class Flq {
    * 使用`findRows`方法代替
    */
   foundRows() {
-    const db = this.clone()
-    const { option: sp } = db
+    const { option: sp } = this
     sp.foundRows = 'SQL_CALC_FOUND_ROWS'
-    return db
+    return this
   }
 
   /**查询 */
-  async find(): Promise<Record<string, any>[]> {
+  async find(
+    option?: WhereOption,
+    connector: WhereOption.Connector = 'AND',
+    comparator: WhereOption.Comparator = '=',
+  ): Promise<Record<string, any>[]> {
+    if(option) this.where(option, connector, comparator)
     this.type = 'select'
     return await this.send('select')
   }
 
   /**查询总列数 */
-  async findRows(): Promise<{ total: number, data: Record<string, any>[] }> {
+  async findRows(
+    option?: WhereOption,
+    connector: WhereOption.Connector = 'AND',
+    comparator: WhereOption.Comparator = '=',
+  ): Promise<{ total: number, data: Record<string, any>[] }> {
+    if(option) this.where(option, connector, comparator)
     this.option.foundRows = 'SQL_CALC_FOUND_ROWS'
     const data = await this.find()
     return {
@@ -873,26 +876,38 @@ export class Flq {
   }
 
   /**查询第一个 */
-  async first(): Promise<Record<string, any>> {
+  async first(
+    option?: WhereOption,
+    connector: WhereOption.Connector = 'AND',
+    comparator: WhereOption.Comparator = '=',
+  ): Promise<Record<string, any>> {
+    if(option) this.where(option, connector, comparator)
     this.type = 'select'
     const data = await this.send('select')
     return data[0]
   }
 
   /**插入 */
-  async add() {
+  async add(option?: ValueOption) {
+    if(option) this.value(option)
     this.type = 'insert'
     return await this.send('insert')
   }
 
   /**插入 */
-  async update() {
+  async update(option?: SetOption) {
+    if(option) this.set(option)
     this.type = 'update'
     return await this.send('update')
   }
 
   /**计数 */
-  async count(): Promise<number> {
+  async count(
+    option?: WhereOption,
+    connector: WhereOption.Connector = 'AND',
+    comparator: WhereOption.Comparator = '=',
+  ): Promise<number> {
+    if(option) this.where(option, connector, comparator)
     this.type = 'select'
     const data = await this.send('count')
     // @ts-ignore
@@ -900,9 +915,42 @@ export class Flq {
   }
 
   /**删除 */
-  async remove() {
+  async remove(
+    option?: WhereOption,
+    connector: WhereOption.Connector = 'AND',
+    comparator: WhereOption.Comparator = '=',
+  ) {
+    if(option) this.where(option, connector, comparator)
     this.type = 'remove'
     return await this.send('remove')
+  }
+
+  /**包含查询 */
+  contain(keyWord: string, field: string | string[], connector: WhereOption.Connector = 'AND') {
+    let fs = Array.isArray(field) ? field : [ field ]
+    const { option: sp } = this
+    const $key = $escape(keyWord).slice(1, -1)
+    const sql = fs.map(e =>  `${$field(e)} LIKE '%${ $key }%' `).join('OR ')
+    if(sp.where) {
+      sp.where += ` ${ connector } ` + sql
+    } else {
+      sp.where = sql
+    }
+    return this
+  }
+
+  /**自增 */
+  selfPlus(field: string, operator: '+' | '-' | '*' | '/' = '+', number: number = 1) {
+    if(!operatorSet.has(operator)) throw new FlqError('selfPlus: 无效运算符')
+    if(typeof number !== 'number') throw new FlqError('selfPlus: 无效数字')
+    const { option: sp } = this
+    const op = {[field]: sql(`${operator} ${number}`)}
+    if(sp.set) {
+      Object.assign(sp.set, op)
+    } else {
+      sp.set = op
+    }
+    return this
   }
 
   /**获取列表-仅列表结构有效 */

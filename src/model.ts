@@ -16,6 +16,7 @@ hooks.on('pretreat', async (option: HooksEvent['petreat']) => {
   if (!model) return
   if (!flq.option.from) return
   const ms = model[flq.option.from[0]]
+  if(!ms) return
   await AsyncErgodic(ms, (model, key) =>
     AsyncErgodic(model, (model, mkey) => {
       const call = models.get(mkey)?.fieldPetreat

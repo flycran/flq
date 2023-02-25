@@ -186,6 +186,34 @@ flq.test(async () => {
 
 查询条件
 
+### contain
+
+`contain(keyWord: string, field: string | string[], connector: WhereOption.Connector = 'AND'): Flq`
+
+包含查询
+
+根据传入的`keyWord`使用`LIKE %${keyWord}%`进行模糊匹配，如果传入多个字段，则使用`OR`连接
+
+### selfPlus
+
+`selfPlus(field: string, operator: '+' | '-' | '*' | '/' = '+', number: number = 1): Flq`
+
+自增
+
+也可以通过`operator`指定运算符，通过`number`指定参与运算的值，而不用担心sql注入
+
+### value
+
+`value(option: ValueOption): Flq`
+
+插入的数据
+
+### set
+
+`set(option: SetOption): Flq`
+
+更改的数据
+
 ### group
 
 `group(option: string): Flq`

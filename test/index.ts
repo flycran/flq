@@ -6,14 +6,24 @@ hooks.on('format', (e: string) => {
 
 const flq = new Flq(
   {
+    host: '47.100.96.69',
+    port: 60330,
     pool: true, // 使用连接池 !推荐使用
-    user: 'root', // 登陆用户
-    password: process.env.SQLPASSWORD, // 登陆密码
-    database: 'test', // 数据库名
+    user: 'think-tanks', // 登陆用户
+    password: '7ejGTtfSrXM7zwEe', // 登陆密码
+    database: 'think-tanks', // 数据库名
   }
 )
 
 flq.setModel({
+  admin: {
+    permissions: {
+      toArray: true
+    },
+    authButton: {
+      toArray: true
+    }
+  },
   student: {
     id: {
       mainKey: true
@@ -79,6 +89,10 @@ flq.setModel({
   }
 })
 
+hooks.on('format', e => {
+  console.log(e)
+})
+
 flq.test(async () => {
   // const db = flq.from('classify').where({
   //   id: 9
@@ -96,7 +110,8 @@ flq.test(async () => {
   // // find 执行查询
   // const result = await db.find()
   // console.log(result)
-  const db = flq.from('class').set({id: sql('id + 1')}).format('update')
+  const db = await flq.from('video').selfPlus('readCount').update()
+  console.log(db)
   // const result = await db.add()
   // console.log(db.sql)
   // console.log(result)
