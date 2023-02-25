@@ -1,5 +1,5 @@
 import { AsyncErgodic } from '@flycran/async-lib'
-import { Connection, createConnection, createPool, escape as $escape, Pool } from 'mysql2'
+import { Connection, createPool, escape as $escape, Pool } from 'mysql2'
 import { hooks } from './hooks'
 import './model'
 import { Option, use } from './model'
@@ -30,7 +30,7 @@ import {
 } from './types'
 
 export {
-  hooks
+  hooks,
 }
 
 const uppers = new Set('QWERTYUIOPASDFGHJKLZXCVBNM')
@@ -497,10 +497,8 @@ export class Flq {
   model?: ModelOption
   /**模型数据 */
   modelData?: ModelData
-  /**连接 */
-  connection?: Connection
   /**连接池 */
-  pool?: Pool
+  pool: Pool
   /**最后操作的条数 */
   total?: number
   /**查询类型 */
@@ -509,44 +507,13 @@ export class Flq {
   slot?: Record<string, any>
 
   constructor(option: ConnectOption) {
-    if(!option) return
-    if(option.pool) {
-      //@ts-ignore
-      this.pool = createPool(option)
-    } else {
-      //@ts-ignore
-      this.connection = createConnection(option)
-    }
+    // @ts-ignore
+    this.pool = createPool(option)
   }
 
   /**插件 */
   static use<T extends keyof ModelOption.Model>(name: T, option: Option<T>) {
     use(name, option)
-  }
-
-  setModel(model: ModelOption) {
-    const md: ModelData = {}
-    this.modelData = md
-    for(const key in model) {
-      const mod = model[key]
-      const mp: Partial<ModelData.Data> = {}
-      md[key] = mp
-      for(const key in mod) {
-        const op = mod[key]
-        if(op.indexField) {
-          mp.indexField = key
-        } else if(op.parentField) {
-          mp.parentField = key
-        } else if(op.gradeField) {
-          mp.gradeField = key
-        } else if(op.mainKey) {
-          mp.mainKey = key
-        } else if(op.childField) {
-          mp.childField = key
-        }
-      }
-    }
-    this.model = model
   }
 
   /**测试 */
@@ -558,16 +525,11 @@ export class Flq {
 
   /**获取连接 */
   getConnect(): Connection | Promise<Connection> {
-    const { pool } = this
     return new Promise((e, r) => {
-      if(pool) {
-        pool.getConnection((err, ctn) => {
-          if(err) return r(err)
-          e(ctn)
-        })
-      } else if(this.connection) {
-        e(this.connection)
-      }
+      this.pool.getConnection((err, ctn) => {
+        if(err) return r(err)
+        e(ctn)
+      })
     })
   }
 
@@ -670,7 +632,6 @@ export class Flq {
     db.option = deepClone(this.option)
     db.model = this.model
     db.modelData = this.modelData
-    db.connection = this.connection
     db.pool = this.pool
     return db
   }

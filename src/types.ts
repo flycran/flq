@@ -4,16 +4,12 @@ import { Flq, Sql } from './index'
 
 /**连接配置 */
 export interface ConnectOption {
-  /**数据库类型(目前仅支持mysql) */
-  type?: 'mysql'
   /**要连接到的数据库的主机名 */
   host?: string
   /**要作为身份验证身份的 MySQL 用户 */
   user?: string
   /**要用于此连接的数据库的名称 */
   database?: string
-  /**使用连接池 */
-  pool?: boolean
   /**要连接到的端口号 */
   port?: number
   /**用于 TCP 连接的源 IP 地址 */
@@ -59,7 +55,7 @@ export interface ConnectOption {
   /**在没有可用连接且已达到限制时确定池的操作 */
   waitForConnections?: boolean | number
   /**一次创建的最大连接数 */
-  connectionLimit?: boolean
+  connectionLimit?: number
   /**池将在返回错误之前排队的最大连接请求数 */
   queueLimit?: number
 }

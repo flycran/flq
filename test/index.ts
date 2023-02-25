@@ -6,78 +6,11 @@ hooks.on('format', (e: string) => {
 
 const flq = new Flq(
   {
-    pool: true, // 使用连接池 !推荐使用
     user: 'root', // 登陆用户
     password: process.env.SQLPASSWORD, // 登陆密码
     database: 'test', // 数据库名
   }
 )
-
-flq.setModel({
-  student: {
-    id: {
-      mainKey: true
-    },
-    association: {
-      toArray: true,
-      async postreat(val) {
-        if(val.length === 0) return []
-        const res = await flq.from('association').mainKey(val).find()
-        return res
-      }
-    },
-    age: {
-      postreat(value) {
-        return value + '周岁'
-      },
-    },
-    avg: {
-      get(row) {
-        return (row.chinese + row.math + row.english) / 3
-        // return association.find()
-      },
-    },
-    all: {
-      set(value, row) {
-        row.chinese = row.math = row.english = value
-      },
-    },
-  },
-  class: {
-    createAt: {
-      default() {
-        return new Date()
-      },
-    },
-    updateAt: {
-      default() {
-        return new Date()
-      },
-    },
-  },
-  albums: {
-    index: {indexField: true}
-  },
-  classify: {
-    id: {
-      mainKey: true
-    },
-    child: {
-      childField: true
-    },
-    parent: {
-      parentField: true
-    },
-    level: {
-      gradeField: true
-    }
-  },
-  association: {
-    id: {
-      mainKey: true
-    }
-  }
-})
 
 flq.test(async () => {
   // const db = flq.from('classify').where({
