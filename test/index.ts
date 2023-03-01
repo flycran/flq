@@ -6,11 +6,11 @@ hooks.on('format', (e: string) => {
 
 const flq = new Flq(
   {
-    host: '47.100.96.69',
-    port: 60330,
+    host: '127.0.01',
+    port: 3306,
     pool: true, // 使用连接池 !推荐使用
     user: 'think-tanks', // 登陆用户
-    password: '7ejGTtfSrXM7zwEe', // 登陆密码
+    password: '123456', // 登陆密码
     database: 'think-tanks', // 数据库名
   }
 )
