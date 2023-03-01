@@ -1,36 +1,49 @@
-import {Flq, hooks, sql} from '../src'
+import { Table, Field } from '../src/index'
 
-hooks.on('format', (e: string) => {
-  console.log(e)
+const user = new Table({
+  //* 用户id
+  userId: {
+    type: 'varchar',
+  },
+  //* 用户名
+  // name: {
+  //   type: 'varchar',
+  //   get(value) {
+  //
+  //   }
+  // },
+  // pass: {
+  //   type: 'varchar',
+  // },
 })
 
-const flq = new Flq(
-  {
-    user: 'root', // 登陆用户
-    password: process.env.SQLPASSWORD, // 登陆密码
-    database: 'test', // 数据库名
-  }
-)
+const f = new Field({
+  type: 'int'
+})
 
-flq.test(async () => {
-  // const db = flq.from('classify').where({
-  //   id: 9
-  // })
-  // const res = await db.recursion({
-  //   type: 'up',
-  //   // gradation: true,
-  //   stop: 2
-  // })
-  // console.log(res)
-  // const db = flq.from('student').field('id', 'name').mainKey(1)
-  // const result = await db.find()
-  // // from 要查询的表格
-  // const db = flq.from('student')
-  // // find 执行查询
-  // const result = await db.find()
-  // console.log(result)
-  const db = flq.from('class').set({id: sql('id + 1')}).format('update')
-  // const result = await db.add()
-  // console.log(db.sql)
-  // console.log(result)
+const video = new Table({
+  userId: user.fieldOptionSet.userId,
+  user: {
+    async get() {
+      return await user.findOne()
+    },
+  },
+  /** 阅读量 */
+  read: {
+    type: 'int',
+  },
+  //* 封面
+  cover: {
+    type: 'varchar',
+  },
+})
+
+user.test(async () => {
+  const a = await user.findOne()
+  const b = await user.update({})
+})
+
+video.test(async () => {
+  const a = await video.findOne()
+  // video.update()
 })
