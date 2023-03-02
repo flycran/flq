@@ -1,35 +1,43 @@
-import { exec } from 'child_process'
 import { Field, ProxyField, Table } from '../src'
-import { DbType, DecFieldGet, DecFieldSet, DTCNT, FieldOption, FOCNT_F } from '../src/types'
+import { DbType, DecFieldGet, DTCNT, FieldOption } from '../src/types'
 
-class ListField<T extends DbType.String = DbType.String, G extends string[] = string[], S extends string[] = string[]> extends Field<DbType.String, string[], string[]> {
+class ListField<T extends DbType.String = DbType.String, G extends string[] = string[], S extends string[] = string[]> extends Field<DbType.String> {
   constructor(option: Omit<FieldOption<DbType.String>, 'get' | 'set'>) {
-    super(option)
-    this.get = (value: string) => value? value.split(','): []
-    const a: DTCNT<DbType.String> = ''
-    this.set = (value: string[]) => value.join(',')
+    super(Object.assign(option, {
+      get: (value: string) => value ? value.split(',') : [],
+      set: (value: string[]) => value.join(',')
+    }))
   }
 }
 
+const name = new Field({
+  type: 'varchar',
+  get(value) {
+    return value ? value.split(',') : []
+  }
+})
+
 const user = new Table({
-  //* 用户id
-  userId: new Field({
-    type: 'int',
-  }),
-  //* 用户名
-  name: new ListField({
-    type: 'varchar',
-  })
+  name,
 })
 
-const f = new ListField({
-  type: 'varchar'
-})
+type N = typeof name
 
-type A = ListField<DbType.String, string[], string[]> extends Field<DbType, unknown, unknown> | ProxyField<unknown, unknown> ? 0 : 1
+const c: DecFieldGet<typeof name> = ['']
+
+type C = DecFieldGet<N>
+
+class A<T = unknown> {
+
+}
+
+class B<T extends string[] = string[]> extends A<string[]> {
+
+}
+
+const a: A = new B()
 
 const video = new Table({
-  userId: user.fieldOptionSet.userId,
   user: new ProxyField({
     async get() {
       return await user.findOne()

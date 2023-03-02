@@ -24,19 +24,21 @@ export type DTCNT<T extends DbType> =
     : T extends DbType.String ? string
       : T extends DbType.Boolean ? boolean | 0 | 1
         : T extends DbType.Date ? Date | number | string
-          : unknown
+          : never
+
+export type Get<T extends DbType> = (vaue: DTCNT<T>, row: Record<string, DbType>) => | any
+export type Set<T extends DbType> = (value: any) => Promise<DTCNT<T>> | DTCNT<T>
 
 //* 字段选项
-export interface FieldOption<T extends DbType = DbType, G = unknown, S = unknown> {
-  default?: DTCNT<T> | (() => DTCNT<T>)
+export interface FieldOption<T extends DbType = DbType, G extends Get<T> = Get<T>> {
   type: T
-  get?: (vaue: DTCNT<T>, row: Record<string, DbType>) => Promise<G> | G
-  set?: (value: S) => Promise<DTCNT<T>> | DTCNT<T>
+  get?: G
+  // set?:
 }
 
-export interface ProxyFieldOption<G = unknown, S = unknown> {
-  get?: () => Promise<G> | G
-  set?: (value: S) => Promise<void> | void
+export interface ProxyFieldOption {
+  get?: () => Promise<any> | any
+  set?: (value: any) => Promise<void> | void
 }
 
 //* 键固定为string类型的键值对
@@ -51,20 +53,20 @@ export type FieldOptionSet = ValuePair<Field | ProxyField>
 
 export type PromiseReturnType<T extends (...args: any) => any> = ReturnType<T> extends Promise<infer R> ? R : ReturnType<T>
 
-//* 字段选项转Node类型(查询类型) field option conversion node type .find
-export type FOCNT_F<T> = T extends { get: () => any } ? PromiseReturnType<T['get']> : T extends { type: DbType } ? DTCNT<T['type']> : unknown
-//* 字段选项转Node类型(更新类型) field option conversion node type .update
-export type FOCNT_U<T> = T extends { set: () => any } ? Parameters<T['set']>[0] : T extends { type: DbType } ? DTCNT<T['type']> : unknown
+export type DecFieldType<T extends Field> = DTCNT<T['option']['type']>
+export type DecFieldGet<T extends Field | ProxyField> =
+  T['option']['get'] extends (...args: any) => any ?
+    PromiseReturnType<T['option']['get']> :
+    T extends Field ?
+      DTCNT<T['option']['type']> :
+      void
 
-export type DecFieldType<T> = T extends Field<infer D, any, any> ? DTCNT<D> : unknown
-export type DecFieldGet<T> = T extends ProxyField<infer A> ? A :
-  T extends Field<any, infer D, any> ? D extends unknown ? DecFieldType<T> :
-      D :
-    unknown
-export type DecFieldSet<T> = T extends ProxyField<any, infer A> ? A :
-  T extends Field<any, any, infer D> ? D extends unknown ? DecFieldType<T> :
-      D :
-    unknown
+export type DecFieldSet<T extends Field | ProxyField> =
+  T['option']['set'] extends (...args: any) => any ?
+    PromiseReturnType<T['option']['set']> :
+    T extends Field ?
+      DTCNT<T['option']['type']> :
+      void
 
 //* 字段选项集合转Node类型(查询类型) field option set conversion node type set .find
 export type FOSCNTS_F<T extends FieldOptionSet> = { [K in keyof T]: DecFieldGet<T[K]> }
