@@ -1,5 +1,12 @@
-import { Sql } from '../old'
-import { FieldFilter, FieldOptionSet, FOCNT_U, FOSCNTSAF, TableOption } from './types'
+import { Sql } from './Sql'
+import {
+  DecFieldSet,
+  FieldFilter,
+  FieldOptionSet, FOCNT_U,
+  FOSCNTSAF,
+  TableOption,
+  UpdateResult,
+} from './types'
 
 export class Table<
   //* 字段选项集合 FieldOptionSet
@@ -56,7 +63,7 @@ export class Table<
     return 0 as unknown as any
   }
 
-  update(data: { [K in keyof FOS]?: FOCNT_U<FOS[K]> | Sql }): Promise<any>
+  update(data: { [K in keyof FOS]?: FOCNT_U<FOS[K]> | Sql }): Promise<UpdateResult>
   update() {
     return 0 as unknown as any
   }
