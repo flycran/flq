@@ -1,22 +1,23 @@
-import { DbType, FieldOption, Get, ProxyFieldOption } from './types'
+import {
+  DbType,
+  FieldOption,
+  Get,
+  Set,
+  ProxyFieldOption,
+  DTCNT,
+} from './types'
 
-interface Type<G extends Get<any>, S extends Set<any>> {
+export class Field<T extends DbType = DbType, G = DTCNT<T>, S = DTCNT<T>> {
+  get?: G
+  set?: S
+  constructor(readonly option: FieldOption<T, G, S>) {
 
-}
-
-export class Field<T extends DbType = DbType, G extends Get<T> = Get<T>> {
-  constructor(readonly option: FieldOption<T, G>) {
   }
 }
 
-new Field({
-  type: 'varchar',
-  get(value) {
-    return value ? value.split(',') : []
-  }
-})
-
-export class ProxyField {
-  constructor(readonly option: ProxyFieldOption) {
+export class ProxyField<T = void, G = never, S = never> {
+  get?: G
+  set?: S
+  constructor(readonly option: ProxyFieldOption<T, G, S>) {
   }
 }

@@ -2,7 +2,7 @@ import { Sql } from './Sql'
 import {
   DecFieldSet,
   FieldFilter,
-  FieldOptionSet, FOCNT_U,
+  FieldOptionSet,
   FOSCNTSAF,
   TableOption,
   UpdateResult,
@@ -63,7 +63,7 @@ export class Table<
     return 0 as unknown as any
   }
 
-  update(data: { [K in keyof FOS]?: FOCNT_U<FOS[K]> | Sql }): Promise<UpdateResult>
+  update(data: { [K in keyof FOS]?: DecFieldSet<FOS[K]> | Sql }): Promise<UpdateResult>
   update() {
     return 0 as unknown as any
   }

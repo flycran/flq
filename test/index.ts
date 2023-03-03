@@ -1,47 +1,49 @@
 import { Field, ProxyField, Table } from '../src'
-import { DbType, DecFieldGet, DTCNT, FieldOption } from '../src/types'
+import {
+  DbType,
+  DecFieldGet, DecTableFieldSet,
+  FieldOption,
+  GetRow,
+} from '../src/types'
 
-class ListField<T extends DbType.String = DbType.String, G extends string[] = string[], S extends string[] = string[]> extends Field<DbType.String> {
+class ListField extends Field<DbType.String, string[], string[]> {
   constructor(option: Omit<FieldOption<DbType.String>, 'get' | 'set'>) {
-    super(Object.assign(option, {
+    super({
+      ...option,
       get: (value: string) => value ? value.split(',') : [],
-      set: (value: string[]) => value.join(',')
-    }))
+      set: (value: string[]) => value.join(','),
+    })
   }
 }
 
-const name = new Field({
-  type: 'varchar',
-  get(value) {
-    return value ? value.split(',') : []
-  }
+// interface subTableFieldOption<G = void, S = void> extends ProxyFieldOption<G, S> {
+//   table:
+// }
+
+class subTableField<T extends Table, F extends DecTableFieldSet<T>, G = never, S = never> extends ProxyField<GetRow<T>, G, S> {
+}
+
+const name = new ProxyField({
+  get() {
+    return ''
+  },
 })
 
 const user = new Table({
-  name,
+  name: new ListField({
+    type: 'varchar'
+  }),
 })
 
-type N = typeof name
+user.test(async () => {
+  const a = await user.findOne()
+  const b = await user.update({})
+})
 
-const c: DecFieldGet<typeof name> = ['']
-
-type C = DecFieldGet<N>
-
-class A<T = unknown> {
-
-}
-
-class B<T extends string[] = string[]> extends A<string[]> {
-
-}
-
-const a: A = new B()
+type A = DecFieldGet<typeof name>
 
 const video = new Table({
   user: new ProxyField({
-    async get() {
-      return await user.findOne()
-    },
   }),
   /** 阅读量 */
   read: new Field({
@@ -53,12 +55,9 @@ const video = new Table({
   }),
 })
 
-user.test(async () => {
-  const a = await user.findOne()
-  const b = await user.update({})
-})
-
 video.test(async () => {
   const a = await video.findOne()
+  a.user.name
+  a.cover
   // video.update()
 })
