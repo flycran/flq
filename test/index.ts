@@ -23,13 +23,25 @@ class ListField extends Field<DbType.String, string[], string[]> {
 class subTableField<T extends Table, F extends DecTableFieldSet<T>, G = never, S = never> extends ProxyField<GetRow<T>, G, S> {
 }
 
-const name = new ProxyField({
+const pf = new ProxyField({
   get() {
     return ''
   },
 })
 
+const f = new Field({
+  type: 'int',
+  get() {
+    return ''
+  },
+})
+
+type A = DecFieldGet<typeof pf>
+
 const user = new Table({
+  userId: new  Field({
+    type: 'int'
+  }),
   name: new ListField({
     type: 'varchar'
   }),
@@ -37,10 +49,10 @@ const user = new Table({
 
 user.test(async () => {
   const a = await user.findOne()
+  a.userId
   const b = await user.update({})
 })
 
-type A = DecFieldGet<typeof name>
 
 const video = new Table({
   user: new ProxyField({

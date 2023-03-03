@@ -15,7 +15,7 @@ export class Field<T extends DbType = DbType, G = DTCNT<T>, S = DTCNT<T>> {
   }
 }
 
-export class ProxyField<T = void, G = never, S = never> {
+export class ProxyField<T = void, G = unknown, S = unknown> {
   get?: G
   set?: S
   constructor(readonly option: ProxyFieldOption<T, G, S>) {

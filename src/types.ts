@@ -36,9 +36,9 @@ export interface FieldOption<T = DbType, G = void, S = void> {
   set?: Set<S, DTCNT<T>>
 }
 
-export interface ProxyFieldOption<T = void, G = void, S = void> {
-  get?: Get<T, G>
-  set?: Set<T, G>
+export interface ProxyFieldOption<T = void, G = unknown, S = unknown> {
+  get?: Get<G, T>
+  set?: Set<S, T>
 }
 
 //* 键固定为string类型的键值对
@@ -56,12 +56,12 @@ export type PromiseReturnType<T extends (...args: any) => any> = ReturnType<T> e
 export type DecFieldType<T extends Field<any, any, any>> = DTCNT<T['option']['type']>
 export type DecFieldGet<T extends Field<any, any, any> | ProxyField<any, any, any>> =
   T['get'] extends never ?
-    never :
+    unknown :
     Exclude<T['get'], void>
 
 export type DecFieldSet<T extends Field<any, any, any> | ProxyField<any, any, any>> =
   T['set'] extends never ?
-    never :
+    unknown :
     Exclude<T['set'], void>
 
 export type DecTableFieldSet<T> = T extends Table<infer A> ? A : never
